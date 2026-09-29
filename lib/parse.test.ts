@@ -6,6 +6,9 @@ describe('parseEmail', () => {
   test('inferred', () => expect(parseEmail('rlee@cs.example.edu (INFERRED - standard institutional pattern, not individually confirmed)')).toEqual({ email: 'rlee@cs.example.edu', confidence: 'inferred' }));
   test('first label wins', () => expect(parseEmail('x@y.org (VERIFIED - earlier pass had inferred it)').confidence).toBe('verified'));
   test('"unverified" is not verified', () => expect(parseEmail('x@y.org (unverified)').confidence).toBe('unknown'));
+  test.each(['not verified', 'could not be verified', 'un-verified', 'never verified'])('negated "%s" is not verified', label =>
+    expect(parseEmail(`x@y.org (${label})`).confidence).toBe('unknown'));
+  test('negated verified then inferred is inferred', () => expect(parseEmail('x@y.org (not verified; INFERRED)').confidence).toBe('inferred'));
   test('no address', () => expect(parseEmail('Not found')).toEqual({ email: null, confidence: null }));
   test('obfuscated address is not guessed', () => expect(parseEmail('name at) iis [g').email).toBeNull());
 });

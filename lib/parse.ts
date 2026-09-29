@@ -11,7 +11,8 @@ export function parseEmail(cell: unknown): { email: string | null; confidence: E
   const m = text.match(EMAIL_RE);
   if (!m) return { email: null, confidence: null };
   const up = text.toUpperCase();
-  const v = up.search(/\bVERIFIED\b/);
+  // a VERIFIED preceded by "not [be]", "never" or "un-" is a negation, not a label
+  const v = up.search(/(?<!\b(?:NOT|NEVER)\s+(?:BE\s+)?)(?<!\bUN-)\bVERIFIED\b/);
   const i = up.indexOf('INFERRED');
   const confidence: EmailConfidence =
     v < 0 && i < 0 ? 'unknown' : i < 0 || (v >= 0 && v < i) ? 'verified' : 'inferred';
