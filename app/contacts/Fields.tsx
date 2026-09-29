@@ -16,7 +16,7 @@ export function Notes({ id, value }: { id: number; value: string | null }) {
   const [, start] = useTransition();
   const saved = useRef(value ?? '');
   return (
-    <textarea defaultValue={value ?? ''} rows={3} placeholder="Your notes (saved when you click away)" className="input w-full" aria-label="Your notes"
+    <textarea defaultValue={value ?? ''} rows={3} placeholder="Your notes (saved when you click away)" className="input w-full resize-y" aria-label="Your notes"
       onBlur={e => { const v = e.target.value; if (v !== saved.current) { saved.current = v; start(() => saveNotes(id, v)); } }} />
   );
 }

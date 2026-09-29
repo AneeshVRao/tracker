@@ -15,7 +15,7 @@ export function ContactActions({ id, actions, outcomes, canUndo }: { id: number;
 
   return (
     <div className="space-y-2">
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5">
         {actions.filter(a => a !== 'close').map(a => (
           <button key={a} disabled={pending} onClick={() => run(() => actContact(id, a))} className={a === 'sent' ? 'btn-primary' : 'btn'}>{ACTION_LABEL[a]}</button>
         ))}
@@ -23,7 +23,7 @@ export function ContactActions({ id, actions, outcomes, canUndo }: { id: number;
         {canUndo && <button className="btn ml-auto" disabled={pending} onClick={() => run(() => undoContact(id))}>Undo last</button>}
       </div>
       {closing && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5 border-l-2 border-line pl-2">
           {outcomes.map(o => <button key={o} className="btn" disabled={pending} onClick={() => run(() => actContact(id, 'close', o))}>{OUTCOME_LABEL[o]}</button>)}
         </div>
       )}

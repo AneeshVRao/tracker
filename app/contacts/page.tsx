@@ -30,10 +30,10 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
-    <div className="flex h-screen">
-      <section className="flex min-w-0 flex-1 flex-col">
-        <form action="/contacts" className="flex flex-wrap items-center gap-2 border-b border-line p-3">
-          <input name="q" defaultValue={sp.q} placeholder="Search name, org, role, message" className="input w-60" />
+    <div className="flex min-h-screen flex-col xl:h-screen xl:flex-row">
+      <section className="flex min-w-0 flex-1 flex-col xl:min-h-0">
+        <form action="/contacts" className="flex flex-wrap items-center gap-1.5 border-b border-line bg-panel px-3 py-2.5">
+          <input name="q" defaultValue={sp.q} placeholder="Search name, org, role, message" className="input w-64" />
           <select name="list" defaultValue={sp.list ?? ''} className="input"><option value="">All lists</option>{lists.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}</select>
           <select name="status" defaultValue={sp.status ?? ''} className="input">
             <option value="">Any status</option><option value="open">Open</option>
@@ -45,35 +45,35 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
           <input name="val" defaultValue={sp.val} placeholder="contains" className="input w-28" />
           <select name="sort" defaultValue={sp.sort ?? ''} className="input"><option value="">Sheet order</option><option value="priority">Priority</option><option value="name">Name</option><option value="follow">Follow-up date</option><option value="touched">Last touched</option></select>
           <button className="btn">Apply</button>
-          <Link href="/contacts" className="text-muted hover:text-fg">Reset</Link>
-          <span className="ml-auto text-muted tabular-nums">{total} contacts</span>
+          <Link href="/contacts" className="rounded px-1.5 py-1 text-muted hover:text-fg">Reset</Link>
+          <span className="ml-auto text-xs tabular-nums text-muted">{total} contacts</span>
         </form>
 
         <form action={bulkForm} className="flex min-h-0 flex-1 flex-col">
-          <div className="flex items-center gap-2 border-b border-line px-3 py-2 text-muted">
-            <span>Selected:</span>
+          <div className="flex flex-wrap items-center gap-1.5 border-b border-line bg-sunken/60 px-3 py-1.5 text-xs text-muted">
+            <span className="mr-1 font-medium">Selected</span>
             <input type="date" name="date" className="input" aria-label="Follow-up date for selected" />
             <button name="op" value="followup" className="btn">Set follow-up</button>
             <button name="op" value="skip" className="btn">Skip</button>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto">
-            <table className="w-full text-left">
-              <thead className="sticky top-0 bg-bg text-muted"><tr>
-                <th className="w-8 px-3 py-2" /><th className="py-2 font-normal">Name</th><th className="font-normal">Organisation</th>
-                <th className="font-normal">List</th><th className="font-normal">Status</th><th className="font-normal">Pri</th><th className="pr-3 font-normal">Follow-up</th>
+          <div className="max-h-[70vh] min-h-0 flex-1 overflow-auto xl:max-h-none">
+            <table className="w-full min-w-[640px] text-left">
+              <thead className="sticky top-0 z-10 border-b border-line bg-bg"><tr>
+                <th className="w-8 px-3 py-1.5" /><th className="th !px-0">Name</th><th className="th !px-0">Organisation</th>
+                <th className="th !px-0">List</th><th className="th !px-0">Status</th><th className="th !px-0">Pri</th><th className="th !pl-0">Follow-up</th>
               </tr></thead>
               <tbody>
                 {rows.map(c => (
-                  <tr key={c.id} className={`border-t border-line ${c.id === openId ? 'bg-accent/10' : 'hover:bg-line/40'}`}>
-                    <td className="px-3"><input type="checkbox" name="ids" value={c.id} aria-label={`Select ${c.name}`} /></td>
-                    <td className="py-1.5">
+                  <tr key={c.id} className={`border-b border-line/70 ${c.id === openId ? 'bg-accent/10 shadow-[inset_2px_0_0_var(--color-accent)]' : 'hover:bg-sunken'}`}>
+                    <td className="px-3 align-middle"><input type="checkbox" name="ids" value={c.id} aria-label={`Select ${c.name}`} /></td>
+                    <td className="py-1.5 pr-3">
                       <Link href={href({ open: c.id })} scroll={false} className="font-medium hover:text-accent">{c.name}</Link>
                       {c.role && <div className="max-w-80 truncate text-xs text-muted">{c.role}</div>}
                     </td>
-                    <td className="max-w-56 truncate">{c.org}</td>
-                    <td className="text-muted">{listName.get(c.list_id)}</td>
-                    <td><StatusChip s={c.status} /></td>
-                    <td className="text-muted">{['', 'L', 'M', 'H'][c.priority]}</td>
+                    <td className="max-w-56 truncate pr-3">{c.org}</td>
+                    <td className="pr-3 text-muted">{listName.get(c.list_id)}</td>
+                    <td className="pr-3"><StatusChip s={c.status} /></td>
+                    <td className="pr-3 text-muted">{['', 'L', 'M', 'H'][c.priority]}</td>
                     <td className="pr-3 tabular-nums text-muted">{c.follow_up_on ?? ''}</td>
                   </tr>
                 ))}
@@ -82,7 +82,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
             {!rows.length && <Empty>No contacts match these filters.</Empty>}
           </div>
           {pages > 1 && (
-            <div className="flex items-center gap-3 border-t border-line px-3 py-2 text-muted">
+            <div className="flex items-center gap-3 border-t border-line bg-panel px-3 py-2 text-xs text-muted [&_a]:rounded [&_a]:px-1 [&_a]:text-fg [&_a]:hover:text-accent">
               {f.page! > 1 && <Link href={href({ page: f.page! - 1 })}>← Prev</Link>}
               <span>Page {f.page} of {pages}</span>
               {f.page! < pages && <Link href={href({ page: f.page! + 1 })}>Next →</Link>}
@@ -92,7 +92,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
       </section>
 
       {detail && (
-        <aside className="w-[520px] shrink-0 overflow-y-auto border-l border-line bg-panel">
+        <aside className="order-first w-full shrink-0 border-b border-line bg-panel xl:order-none xl:w-[520px] xl:overflow-y-auto xl:border-b-0 xl:border-l">
           <ContactPanel d={detail} closeHref={href({ open: undefined })} />
         </aside>
       )}

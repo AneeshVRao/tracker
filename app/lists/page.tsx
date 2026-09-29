@@ -6,22 +6,22 @@ import { listSummaries } from '@/lib/queries';
 export default function ListsPage() {
   const lists = listSummaries(getDb());
   return (
-    <div className="mx-auto max-w-5xl space-y-4 p-6">
+    <div className="mx-auto max-w-5xl space-y-4 px-6 py-8">
       <div className="flex items-center gap-2">
-        <h1 className="flex-1 text-lg font-semibold">Lists</h1>
+        <h1 className="page-title flex-1">Lists</h1>
         <Link href="/import" className="btn">Import workbook</Link>
         {lists.length > 0 && <a href="/api/export" className="btn-primary">Export to Excel</a>}
       </div>
       {!lists.length ? <Empty>Nothing imported yet.</Empty> : (
-        <table className="w-full text-left">
-          <thead className="text-muted"><tr>
-            <th className="py-1 font-normal">List</th><th className="font-normal">Type</th><th className="font-normal">Source</th>
-            <th className="text-right font-normal">Total</th><th className="text-right font-normal">To contact</th><th className="text-right font-normal">Pending</th>
-            <th className="text-right font-normal">Talking</th><th className="text-right font-normal">Closed</th><th className="text-right font-normal">Skipped</th>
+        <div className="card overflow-x-auto"><table className="w-full min-w-[720px] text-left">
+          <thead className="border-b border-line bg-sunken/60"><tr>
+            <th className="th">List</th><th className="th">Type</th><th className="th">Source</th>
+            <th className="th text-right">Total</th><th className="th text-right">To contact</th><th className="th text-right">Pending</th>
+            <th className="th text-right">Talking</th><th className="th text-right">Closed</th><th className="th text-right">Skipped</th>
           </tr></thead>
           <tbody>{lists.map(l => (
-            <tr key={l.id} className="border-t border-line tabular-nums">
-              <td className="py-1.5"><Link href={`/lists/${l.id}`} className="font-medium hover:text-accent">{l.name}</Link></td>
+            <tr key={l.id} className="border-t border-line tabular-nums first:border-t-0 hover:bg-sunken [&>td]:px-3 [&>td]:py-2">
+              <td><Link href={`/lists/${l.id}`} className="font-medium hover:text-accent">{l.name}</Link></td>
               <td className="text-muted">{l.kind === 'reference' ? 'Reference' : l.channel === 'email' ? 'Email' : 'LinkedIn'}</td>
               <td className="max-w-60 truncate text-muted">{l.source_file} › {l.source_sheet}</td>
               <td className="text-right">{l.total}</td>
@@ -31,7 +31,7 @@ export default function ListsPage() {
               </>}
             </tr>
           ))}</tbody>
-        </table>
+        </table></div>
       )}
     </div>
   );
