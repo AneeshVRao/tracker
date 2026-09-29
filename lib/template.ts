@@ -58,7 +58,8 @@ export function render(tpl: string, c: TemplateContext): { text: string; missing
   const { first, last } = nameParts(c.name);
   const vars: Record<string, string | null> = { first_name: first, last_name: last, name: c.name, org: c.org, role: c.role, message: c.message };
   const text = tpl.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_, key: string) => {
-    const v = key.startsWith('col:') ? c.extra[key.slice(4).trim()] : vars[key];
+    const [src, k] = key.startsWith('col:') ? [c.extra, key.slice(4).trim()] : [vars, key];
+    const v = Object.hasOwn(src, k) ? src[k] : null;
     if (v == null || v.trim() === '') {
       missing.push(key);
       return `[[missing: ${key}]]`;

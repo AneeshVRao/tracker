@@ -16,12 +16,15 @@ export async function buildExport(db: DB): Promise<Buffer> {
   const used = new Set<string>();
   const tz = getSettings(db).my_timezone;
   const day = (ts: string | null) => (ts ? todayIn(tz, new Date(ts)) : '');
-  for (const l of db.prepare("SELECT * FROM lists WHERE kind = 'contacts' ORDER BY id").all() as List[]) {
+  for (const l of db.prepare("SELECT * FROM lists ORDER BY id").all() as List[]) {
     const ws = wb.addWorksheet(sheetName(l.name, used));
     const headers = JSON.parse(l.headers) as string[];
-    ws.addRow([...headers, 'Status', 'Outcome', 'Sent At', 'Follow Up On', 'Message (current)', 'My Notes', 'Last Touch']).font = { bold: true };
+    const ref = l.kind === 'reference';
+    if (ref) ws.addRow(headers).font = { bold: true };
+    else ws.addRow([...headers, 'Status', 'Outcome', 'Sent At', 'Follow Up On', 'Message (current)', 'My Notes', 'Last Touch']).font = { bold: true };
     for (const c of db.prepare('SELECT * FROM contacts WHERE list_id = ? ORDER BY source_row').all(l.id) as Contact[]) {
       const extra = JSON.parse(c.extra) as Record<string, string>;
+      if (ref) { ws.addRow(headers.map(h => extra[h] ?? '')); continue; }
       ws.addRow([
         ...headers.map(h => extra[h] ?? ''), STATUS_LABEL[c.status], c.outcome ? OUTCOME_LABEL[c.outcome] : '', day(c.sent_at),
         c.follow_up_on ?? '', c.message ?? '', c.my_notes ?? '', day(c.last_touch_at),

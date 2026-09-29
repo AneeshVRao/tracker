@@ -28,8 +28,9 @@ export function listContacts(db: DB, f: Filters): { rows: Contact[]; total: numb
   if (f.priority) add('priority = ?', f.priority);
   if (f.conf === 'none') where.push('email IS NULL');
   else if (f.conf) add('email_confidence = ?', f.conf);
-  if (f.q) { const like = `%${f.q}%`; add('(name LIKE ? OR org LIKE ? OR role LIKE ? OR message LIKE ?)', like, like, like, like); }
-  if (f.col && f.val) add('json_extract(extra, ?) LIKE ?', `$."${f.col.replaceAll('"', '')}"`, `%${f.val}%`);
+  const like = (s: string) => `%${s.replace(/[\\%_]/g, '\\$&')}%`;
+  if (f.q) { const l = like(f.q); add("(name LIKE ? ESCAPE '\\' OR org LIKE ? ESCAPE '\\' OR role LIKE ? ESCAPE '\\' OR message LIKE ? ESCAPE '\\')", l, l, l, l); }
+  if (f.col && f.val && listHeaders(db, f.list).includes(f.col)) add("json_extract(extra, ?) LIKE ? ESCAPE '\\'", `$."${f.col.replaceAll('"', '')}"`, like(f.val));
   const w = where.join(' AND ');
   const total = (db.prepare(`SELECT COUNT(*) AS n FROM contacts WHERE ${w}`).get(...args) as { n: number }).n;
   const page = Math.max(1, f.page ?? 1);

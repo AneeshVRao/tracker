@@ -9,7 +9,7 @@
   --color-muted: #63636b;
   --color-line: #e4e4e7;
   --color-accent: #2f5bd3;
-  --color-warn: #a15c07;
+  --color-warn: #8f5206;
   --color-bad: #b42318;
   --color-good: #16794c;
   --radius-md: 6px;
@@ -39,14 +39,14 @@
 
 body { background: var(--color-bg); color: var(--color-fg); font-size: 13px; line-height: 1.45; letter-spacing: -0.003em; }
 ::selection { background: color-mix(in srgb, var(--color-accent) 25%, transparent); }
-:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; border-radius: 4px; }
+:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 input[type="checkbox"] { accent-color: var(--color-accent); width: 14px; height: 14px; }
 select.input { padding-right: 1.25rem; }
 a, button { transition: color .12s, background-color .12s, border-color .12s, opacity .12s; }
 @media (prefers-reduced-motion: reduce) { a, button { transition: none; } }
 
 @layer components {
-  .input { @apply rounded-md border border-line bg-panel px-2 py-1 text-[13px] text-fg shadow-xs outline-none placeholder:text-muted/80 hover:border-fg/25 focus:border-accent focus-visible:outline-none focus:ring-2 focus:ring-accent/25; }
+  .input { @apply rounded-md border border-line bg-panel px-2 py-1 text-[13px] text-fg shadow-xs outline-none placeholder:text-muted hover:border-fg/25 focus:border-accent focus-visible:outline-none focus:ring-2 focus:ring-accent/25; }
   .btn { @apply inline-flex cursor-pointer items-center justify-center gap-1 whitespace-nowrap rounded-md border border-line bg-panel px-2.5 py-1 text-[13px] font-medium shadow-xs hover:border-fg/30 hover:bg-sunken active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40; }
   .btn-primary { @apply inline-flex cursor-pointer items-center justify-center gap-1 whitespace-nowrap rounded-md border border-transparent bg-accent px-2.5 py-1 text-[13px] font-medium text-white shadow-xs hover:brightness-110 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40; }
   .nav { @apply rounded-md px-2 py-1 text-muted hover:bg-line/60 hover:text-fg; }

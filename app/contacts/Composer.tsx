@@ -17,7 +17,7 @@ export function Composer(p: Props) {
   const [saving, start] = useTransition();
   const limit = p.channel === 'linkedin' ? 300 : null;
   const over = limit !== null && text.length > limit;
-  const blocked = hasBlockers(text) || (over && !override);
+  const blocked = hasBlockers(text) || hasBlockers(p.subject) || (over && !override);
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(''), 2500); };
 
   const write = async () => {
@@ -38,7 +38,7 @@ export function Composer(p: Props) {
       {p.channel === 'email' && p.confidence === 'inferred' && <p className="text-xs text-warn">Inferred email ({p.to}). Verify it before sending.</p>}
       {p.channel === 'linkedin' && !p.linkedinUrl && <p className="text-xs text-bad">No LinkedIn URL in the sheet.</p>}
       {p.firstEmail && <p className="text-xs text-muted">Attach your CV.</p>}
-      {p.subject && <p><span className="label mr-1">Subject</span>{p.subject}</p>}
+      {p.subject && <p><span className="label mr-1">Subject</span>{' '}{p.subject}</p>}
       <textarea value={text} onChange={e => setText(e.target.value)} rows={p.channel === 'email' ? 14 : 6}
         className="input w-full font-mono text-[12.5px] leading-relaxed" aria-label="Message" />
       <div className="flex flex-wrap items-center gap-1.5">
@@ -56,7 +56,7 @@ export function Composer(p: Props) {
           <input type="checkbox" checked={override} onChange={e => setOverride(e.target.checked)} /> Copy anyway (LinkedIn cuts notes at 300)
         </label>
       )}
-      {hasBlockers(text) && <p className="text-xs text-warn">Replace every [[…]] before copying.</p>}
+      {(hasBlockers(text) || hasBlockers(p.subject)) && <p className="text-xs text-warn">Replace every [[…]] before copying.</p>}
       {toast && <p role="status" className="text-xs text-good">{toast}</p>}
     </div>
   );

@@ -12,6 +12,10 @@ describe('render', () => {
     expect(r.text).toBe('[[missing: col:Empty]] [[missing: col:Nope]] [[missing: bogus]]');
     expect(r.missing).toEqual(['col:Empty', 'col:Nope', 'bogus']);
   });
+  test('prototype keys are treated as missing, not crashes', () => {
+    const r = render('{{constructor}} {{col:toString}}', ctx);
+    expect(r.text).toBe('[[missing: constructor]] [[missing: col:toString]]');
+  });
   test('default email body renders with edit markers that block copying', () => {
     const r = render(DEFAULT_TEMPLATES.email.body, ctx);
     expect(r.missing).toEqual([]);

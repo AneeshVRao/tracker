@@ -101,3 +101,17 @@ describe('reads', () => {
   test('summaries count by status', () =>
     expect(listSummaries(seed())[0]).toMatchObject({ name: 'Profs', total: 2, to_contact: 2, pending: 0 }));
 });
+
+describe('listContacts hardening', () => {
+  test('unknown or malformed col is ignored', () => {
+    const db = seed();
+    expect(listContacts(db, { col: 'Nope\\', val: 'x' }).total).toBe(3);
+    expect(listContacts(db, { col: 'Track', val: 'hardware' }).total).toBe(1);
+  });
+  test('LIKE wildcards in q and val are literal', () => {
+    const db = seed();
+    expect(listContacts(db, { q: '%' }).total).toBe(0);
+    expect(listContacts(db, { q: '_' }).total).toBe(0);
+    expect(listContacts(db, { col: 'Track', val: '%' }).total).toBe(0);
+  });
+});
