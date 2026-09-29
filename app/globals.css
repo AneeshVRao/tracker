@@ -1,26 +1,36 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@theme {
+  --color-bg: #fbfbfa;
+  --color-panel: #ffffff;
+  --color-fg: #1c1c1a;
+  --color-muted: #6b6b66;
+  --color-line: #e6e5e1;
+  --color-accent: #2f5bd3;
+  --color-warn: #a15c07;
+  --color-bad: #b42318;
+  --color-good: #16794c;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --color-bg: #121211;
+    --color-panel: #1a1a19;
+    --color-fg: #ecebe8;
+    --color-muted: #9a9993;
+    --color-line: #2c2c2a;
+    --color-accent: #8aa6f8;
+    --color-warn: #f0b24a;
+    --color-bad: #f28b82;
+    --color-good: #5fcf8f;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+body { background: var(--color-bg); color: var(--color-fg); font-size: 14px; }
+
+@layer components {
+  .input { @apply rounded-md border border-line bg-panel px-2 py-1.5 outline-none focus:border-accent; }
+  .btn { @apply rounded-md border border-line bg-panel px-3 py-1.5 hover:border-fg/40 disabled:opacity-40; }
+  .btn-primary { @apply rounded-md bg-accent px-3 py-1.5 font-medium text-white hover:opacity-90 disabled:opacity-40; }
+  .nav { @apply rounded-md px-2 py-1.5 text-muted hover:bg-line/60 hover:text-fg; }
 }
