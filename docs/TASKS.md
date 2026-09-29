@@ -18,6 +18,16 @@ Spec: [specs/2026-09-29-outreach-tracker-design.md](specs/2026-09-29-outreach-tr
 
 **Done when:** all three workbooks import as 250 / 30 (reference) / 466 / 234 / 50 with 11 professors skipped; re-import changes nothing; copy → open → mark sent → undo works; export opens in Excel.
 
+### Known follow-ups from M1 reviews (none block use)
+
+- Bulk "Set follow-up" also applies to closed/skipped contacts — limit to open statuses before the Today view (M2).
+- `conversation` / `checked_in` follow-ups hardcode +7 days instead of a setting (M2 settings page).
+- `DEFAULT_SETTINGS` is a shared mutable object — freeze or copy before adding the settings page.
+- Header auto-mapping: exact-match pass ignores synonym order; negative terms match substrings; a sheet with "Email Angle" but no Email column maps email→angle (the wizard shows it, fix by hand).
+- Deadline parsing: yearless/"may" false positives beyond the documented one; `parseDegree` misses multi-line cells.
+- Server actions other than import throw instead of returning `{ error }`; undo shows no message when there's nothing to undo.
+- Below 1280px the contact panel stacks above the table (tab order ≠ visual order); `next/font` fetches Geist at build time.
+
 ## M2 Daily driver — plan to be written after M1 ships
 
 - [ ] Today page (F2): deadlines, follow-ups due, replies waiting, next batch
