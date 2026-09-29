@@ -44,20 +44,46 @@ export async function previewWorkbook(fd: FormData): Promise<{ tabs: PreviewTab[
   } catch (e) { return { error: message(e) }; }
 }
 
+const isStr = (v: unknown): v is string => typeof v === 'string';
+
+function parseConfigs(raw: unknown): TabConfig[] {
+  const bad = () => new Error('Invalid import config');
+  if (!Array.isArray(raw)) throw bad();
+  for (const c of raw) {
+    if (!c || typeof c !== 'object') throw bad();
+    const { sheet, include, listName, kind, channel, mapping, existingListId } = c as Record<string, unknown>;
+    if (!isStr(sheet) || !sheet || typeof include !== 'boolean' || !isStr(listName) || !listName.trim()) throw bad();
+    if (kind !== 'contacts' && kind !== 'reference') throw bad();
+    if (channel !== 'email' && channel !== 'linkedin') throw bad();
+    if (!mapping || typeof mapping !== 'object' || Array.isArray(mapping)) throw bad();
+    for (const [k, v] of Object.entries(mapping)) {
+      if (k === 'exclude' && v === undefined) continue;
+      if (k === 'exclude') {
+        const e = v as Record<string, unknown> | null;
+        if (!e || typeof e !== 'object' || !isStr(e.column) || !isStr(e.contains)) throw bad();
+      } else if (v !== undefined && !isStr(v)) throw bad();
+    }
+    if (existingListId !== null && existingListId !== undefined && !(Number.isInteger(existingListId) && (existingListId as number) > 0)) throw bad();
+  }
+  return raw as TabConfig[];
+}
+
 export async function runImport(fd: FormData): Promise<{ reports: ImportReport[] } | { error: string }> {
   try {
     const { name, sheets } = await sheetsFrom(fd);
-    const configs = JSON.parse(String(fd.get('config'))) as TabConfig[];
-    const db = getDb();
-    const settings = q.getSettings(db);
-    const now = new Date();
-    const reports = configs.filter(c => c.include).map(cfg => {
+    let raw: unknown;
+    try { raw = JSON.parse(String(fd.get('config'))); } catch { throw new Error('Invalid import config'); }
+    const jobs = parseConfigs(raw).filter(c => c.include).map(cfg => {
       const sheet = sheets.find(s => s.name === cfg.sheet);
       if (!sheet) throw new Error(`Sheet "${cfg.sheet}" not found in ${name}`);
       if (cfg.kind === 'contacts' && !cfg.mapping.name) throw new Error(`"${cfg.sheet}": map the Name column first`);
-      return importSheet(db, name, sheet, cfg, { now, settings });
+      return { cfg, sheet };
     });
-    refresh();
-    return { reports };
+    const db = getDb();
+    const settings = q.getSettings(db);
+    const now = new Date();
+    try {
+      return { reports: jobs.map(({ cfg, sheet }) => importSheet(db, name, sheet, cfg, { now, settings })) };
+    } finally { refresh(); }
   } catch (e) { return { error: message(e) }; }
 }

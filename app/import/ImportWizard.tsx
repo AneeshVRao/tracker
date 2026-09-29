@@ -53,11 +53,11 @@ export function ImportWizard() {
 
   return (
     <div className="space-y-4">
-      <label className="block cursor-pointer rounded-lg border border-dashed border-line p-8 text-center text-muted hover:border-accent">
+      <label className="block cursor-pointer rounded-lg border border-dashed border-line p-8 text-center text-muted hover:border-accent focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30">
         {file ? file.name : 'Drop an .xlsx here or click to choose'}
         <input type="file" accept=".xlsx" className="sr-only" onChange={e => pick(e.target.files?.[0] ?? null)} />
       </label>
-      {pending && <p className="text-muted">Reading…</p>}
+      {pending && <p role="status" className="text-muted">Reading…</p>}
       {error && <p role="alert" className="text-bad">{error}</p>}
 
       {tabs.map((t, i) => (
@@ -91,7 +91,7 @@ export function ImportWizard() {
                   const col = t.mapping[f] ?? '';
                   return [
                     <span key={`${f}l`} className="text-muted">{FIELD_LABEL[f]}</span>,
-                    <select key={`${f}s`} className="input" value={col} onChange={e => setField(i, f, e.target.value)}>
+                    <select key={`${f}s`} aria-label={FIELD_LABEL[f]} className="input" value={col} onChange={e => setField(i, f, e.target.value)}>
                       <option value="">— none —</option>
                       {t.headers.map(h => <option key={h} value={h}>{h}</option>)}
                     </select>,
@@ -102,13 +102,13 @@ export function ImportWizard() {
               {t.kind === 'contacts' && (
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-muted">Start as Skipped when</span>
-                  <select className="input" value={t.mapping.exclude?.column ?? ''} onChange={e => patch(i, { mapping: { ...t.mapping, exclude: e.target.value ? { column: e.target.value, contains: t.mapping.exclude?.contains ?? '' } : undefined } })}>
+                  <select aria-label="Skip rule column" className="input" value={t.mapping.exclude?.column ?? ''} onChange={e => patch(i, { mapping: { ...t.mapping, exclude: e.target.value ? { column: e.target.value, contains: t.mapping.exclude?.contains ?? '' } : undefined } })}>
                     <option value="">— no rule —</option>
                     {t.headers.map(h => <option key={h} value={h}>{h}</option>)}
                   </select>
                   {t.mapping.exclude && <>
                     <span className="text-muted">contains</span>
-                    <input className="input" value={t.mapping.exclude.contains} onChange={e => patch(i, { mapping: { ...t.mapping, exclude: { column: t.mapping.exclude!.column, contains: e.target.value } } })} />
+                    <input aria-label="Skip rule text" className="input" value={t.mapping.exclude.contains} onChange={e => patch(i, { mapping: { ...t.mapping, exclude: { column: t.mapping.exclude!.column, contains: e.target.value } } })} />
                   </>}
                 </div>
               )}
