@@ -16,3 +16,13 @@ test('one tab per contact list with original columns + tracking columns', async 
   expect(row(1)).toEqual(['Name', 'Track', 'Status', 'Outcome', 'Sent At', 'Follow Up On', 'Message (current)', 'My Notes', 'Last Touch']);
   expect(row(2)).toEqual(['Prof A', 'HW', 'Sent', '', '', '', 'edited', 'n1', '']);
 });
+
+test('dates use my_timezone and outcome uses its label', async () => {
+  const db = openDb(':memory:');
+  db.prepare("INSERT INTO lists (name, kind, channel, source_file, source_sheet, header_sig, headers, mapping, imported_at) VALUES ('P', 'contacts', 'email', 'f', 's', 'h', '[\"Name\"]', '{}', 't')").run();
+  db.prepare("INSERT INTO contacts (list_id, person_key, source_row, name, status, outcome, sent_at, last_touch_at, extra) VALUES (1, 'k', 2, 'A', 'closed', 'no_reply', '2026-09-28T20:00:00.000Z', '2026-09-28T20:00:00.000Z', '{\"Name\":\"A\"}')").run();
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.load((await buildExport(db)) as unknown as ExcelJS.Buffer);
+  const r = wb.worksheets[0].getRow(2);
+  expect([3, 4, 5, 8].map(i => r.getCell(i).text)).toEqual(['No reply', '2026-09-29', '', '2026-09-29']);
+});

@@ -12,10 +12,10 @@ export function getSettings(db: DB): Settings {
 export const PAGE_SIZE = 100;
 export type Filters = { list?: number; status?: string; q?: string; priority?: number; conf?: string; col?: string; val?: string; sort?: string; page?: number };
 const SORTS: Record<string, string> = {
-  priority: 'priority DESC, list_id, source_row',
-  name: 'name COLLATE NOCASE',
-  touched: 'last_touch_at DESC NULLS LAST',
-  follow: 'follow_up_on IS NULL, follow_up_on',
+  priority: 'priority DESC, list_id, source_row, id',
+  name: 'name COLLATE NOCASE, id',
+  touched: 'last_touch_at DESC NULLS LAST, id',
+  follow: 'follow_up_on IS NULL, follow_up_on, id',
 };
 
 export function listContacts(db: DB, f: Filters): { rows: Contact[]; total: number } {
@@ -33,7 +33,7 @@ export function listContacts(db: DB, f: Filters): { rows: Contact[]; total: numb
   const w = where.join(' AND ');
   const total = (db.prepare(`SELECT COUNT(*) AS n FROM contacts WHERE ${w}`).get(...args) as { n: number }).n;
   const page = Math.max(1, f.page ?? 1);
-  const order = SORTS[f.sort ?? ''] ?? 'list_id, source_row';
+  const order = Object.hasOwn(SORTS, f.sort ?? '') ? SORTS[f.sort!] : 'list_id, source_row, id';
   const rows = db.prepare(`SELECT * FROM contacts WHERE ${w} ORDER BY ${order} LIMIT ? OFFSET ?`).all(...args, PAGE_SIZE, (page - 1) * PAGE_SIZE) as Contact[];
   return { rows, total };
 }
@@ -101,7 +101,7 @@ export function performAction(db: DB, id: number, action: Action, outcome?: Outc
 }
 
 const undoTarget = (db: DB, id: number) =>
-  db.prepare("SELECT id, data FROM events WHERE contact_id = ? AND reverted = 0 AND type <> 'imported' AND data LIKE '%\"prev\"%' ORDER BY id DESC LIMIT 1")
+  db.prepare("SELECT id, data FROM events WHERE contact_id = ? AND reverted = 0 AND type <> 'imported' AND json_extract(data, '$.prev') IS NOT NULL ORDER BY id DESC LIMIT 1")
     .get(id) as { id: number; data: string } | undefined;
 
 export function undoLast(db: DB, id: number): boolean {
@@ -134,8 +134,9 @@ export function setNotes(db: DB, id: number, text: string) {
 }
 
 export function bulkSkip(db: DB, ids: number[], now = new Date()): number {
+  const cs = ids.map(id => mustGet(db, id)); // validate all before writing any
   let n = 0;
-  for (const id of ids) {
+  for (const { id } of cs) {
     if (mustGet(db, id).status !== 'to_contact') continue;
     performAction(db, id, 'skip', undefined, now);
     n++;
@@ -144,6 +145,8 @@ export function bulkSkip(db: DB, ids: number[], now = new Date()): number {
 }
 
 export function bulkFollowUp(db: DB, ids: number[], date: string, now = new Date()): number {
+  ids.forEach(id => mustGet(db, id));
+  if (!ISO_DATE.test(date)) throw new Error('Expected a YYYY-MM-DD date');
   for (const id of ids) editContact(db, id, 'follow_up_on', date, now);
   return ids.length;
 }

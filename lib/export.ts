@@ -1,6 +1,7 @@
 import ExcelJS from 'exceljs';
 import type { Contact, DB, List } from './db';
-import { STATUS_LABEL } from './rules';
+import { getSettings } from './queries';
+import { OUTCOME_LABEL, STATUS_LABEL, todayIn } from './rules';
 
 function sheetName(name: string, used: Set<string>): string {
   const base = name.replace(/[\[\]:*?/\\]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 28) || 'List';
@@ -13,6 +14,8 @@ function sheetName(name: string, used: Set<string>): string {
 export async function buildExport(db: DB): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
   const used = new Set<string>();
+  const tz = getSettings(db).my_timezone;
+  const day = (ts: string | null) => (ts ? todayIn(tz, new Date(ts)) : '');
   for (const l of db.prepare("SELECT * FROM lists WHERE kind = 'contacts' ORDER BY id").all() as List[]) {
     const ws = wb.addWorksheet(sheetName(l.name, used));
     const headers = JSON.parse(l.headers) as string[];
@@ -20,8 +23,8 @@ export async function buildExport(db: DB): Promise<Buffer> {
     for (const c of db.prepare('SELECT * FROM contacts WHERE list_id = ? ORDER BY source_row').all(l.id) as Contact[]) {
       const extra = JSON.parse(c.extra) as Record<string, string>;
       ws.addRow([
-        ...headers.map(h => extra[h] ?? ''), STATUS_LABEL[c.status], c.outcome ?? '', c.sent_at?.slice(0, 10) ?? '',
-        c.follow_up_on ?? '', c.message ?? '', c.my_notes ?? '', c.last_touch_at?.slice(0, 10) ?? '',
+        ...headers.map(h => extra[h] ?? ''), STATUS_LABEL[c.status], c.outcome ? OUTCOME_LABEL[c.outcome] : '', day(c.sent_at),
+        c.follow_up_on ?? '', c.message ?? '', c.my_notes ?? '', day(c.last_touch_at),
       ]);
     }
   }

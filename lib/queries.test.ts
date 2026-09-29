@@ -62,6 +62,26 @@ describe('actions', () => {
     expect(getContactDetail(db, 2)!.contact.status).toBe('skipped');
     expect(bulkFollowUp(db, [1, 2], '2026-10-10', now)).toBe(2);
   });
+
+  test('bulk ops validate before writing anything', () => {
+    const db = seed();
+    expect(() => bulkSkip(db, [2, 999], now)).toThrow(/not found/);
+    expect(getContactDetail(db, 2)!.contact.status).toBe('to_contact');
+    expect(() => bulkFollowUp(db, [1, 999], '2026-10-10', now)).toThrow(/not found/);
+    expect(getContactDetail(db, 1)!.contact.follow_up_on).toBeNull();
+    expect(() => bulkFollowUp(db, [1], 'soon', now)).toThrow(/date/);
+  });
+
+  test('undo reverts only the latest of chained actions', () => {
+    const db = seed();
+    performAction(db, 1, 'sent', undefined, now);
+    performAction(db, 1, 'nudged', undefined, now);
+    expect(getContactDetail(db, 1)!.contact.followup_step).toBe(2);
+    undoLast(db, 1);
+    const d = getContactDetail(db, 1)!;
+    expect(d.contact).toMatchObject({ status: 'sent', followup_step: 1 });
+    expect(d.events.map(e => e.reverted)).toEqual([1, 0]);
+  });
 });
 
 describe('reads', () => {
@@ -72,6 +92,7 @@ describe('reads', () => {
     expect(listContacts(db, { q: 'iit y' }).rows.map(r => r.name)).toEqual(['Prof B']);
     expect(listContacts(db, { col: 'Track', val: 'hardware' }).rows.map(r => r.id)).toEqual([1]);
     expect(listContacts(db, { sort: 'priority' }).rows.map(r => r.id)).toEqual([1, 3, 2]);
+    expect(listContacts(db, { sort: 'constructor' }).rows.map(r => r.id)).toEqual([1, 2, 3]);
     performAction(db, 2, 'skip', undefined, now);
     expect(listContacts(db, { status: 'open' }).total).toBe(2);
   });
