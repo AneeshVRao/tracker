@@ -16,7 +16,7 @@ export type PreviewTab = TabConfig & {
 };
 export type ImportReport = {
   sheet: string; listId: number; listName: string; inserted: number; updated: number; unchanged: number;
-  skippedByRule: number; noName: number; crossListDupes: number; missingFromFile: number;
+  skippedByRule: number; noName: number; crossListDupes: number; duplicateInFile: number; missingFromFile: number;
 };
 export type ParsedRow = {
   name: string; org: string | null; role: string | null; country: string | null;
@@ -60,7 +60,7 @@ export function previewSheets(db: DB, fileName: string, sheets: Sheet[]): Previe
     const missingColumns = Object.entries(mapping)
       .filter(([k, v]) => k !== 'exclude' && typeof v === 'string' && !sheet.headers.includes(v)).map(([k]) => k);
     for (const k of missingColumns) delete mapping[k as Field];
-    if (mapping.exclude && !sheet.headers.includes(mapping.exclude.column)) delete mapping.exclude;
+    if (mapping.exclude && !sheet.headers.includes(mapping.exclude.column)) { delete mapping.exclude; missingColumns.push('exclude'); }
     return {
       sheet: sheet.name, rowCount: rows.length, headers: sheet.headers, samples: samplesOf(sheet),
       include: prior ? true : guessInclude(sheet.name, rows.length),
@@ -82,6 +82,7 @@ export function importSheet(db: DB, fileName: string, sheet: Sheet, cfg: TabConf
     const isRef = cfg.kind === 'reference';
     const listCols = [cfg.listName, cfg.kind, isRef ? null : cfg.channel, fileName, sheet.name, headerSig(sheet.headers), JSON.stringify(sheet.headers), JSON.stringify(cfg.mapping)];
     let listId = cfg.existingListId;
+    if (listId && !db.prepare('SELECT 1 FROM lists WHERE id = ?').get(listId)) throw new Error(`List ${listId} not found — re-open the import preview`);
     if (listId) {
       db.prepare('UPDATE lists SET name=?, kind=?, channel=?, source_file=?, source_sheet=?, header_sig=?, headers=?, mapping=?, imported_at=? WHERE id=?').run(...listCols, now, listId);
     } else {
@@ -97,7 +98,7 @@ export function importSheet(db: DB, fileName: string, sheet: Sheet, cfg: TabConf
     const getById = db.prepare('SELECT * FROM contacts WHERE id = ?');
     const addEvent = db.prepare('INSERT INTO events (contact_id, type, at, data) VALUES (?,?,?,?)');
     const seen = new Set<number>();
-    const r: ImportReport = { sheet: sheet.name, listId, listName: cfg.listName, inserted: 0, updated: 0, unchanged: 0, skippedByRule: 0, noName: 0, crossListDupes: 0, missingFromFile: 0 };
+    const r: ImportReport = { sheet: sheet.name, listId, listName: cfg.listName, inserted: 0, updated: 0, unchanged: 0, skippedByRule: 0, noName: 0, crossListDupes: 0, duplicateInFile: 0, missingFromFile: 0 };
     const rule = cfg.mapping.exclude?.contains ? cfg.mapping.exclude : undefined;
 
     for (const { row, values } of sheet.rows) {
@@ -105,7 +106,10 @@ export function importSheet(db: DB, fileName: string, sheet: Sheet, cfg: TabConf
       if (!c.name) { r.noName++; continue; }
       const key = isRef ? `ref:${row}` : personKey(c);
       if (!isRef && otherKeys.has(key)) r.crossListDupes++;
-      const prior = byKey.get(key) ?? (isRef ? undefined : byNameOrg.get(nameOrgKey(c.name, c.org)));
+      const hit = byKey.get(key);
+      if (hit && seen.has(hit.id)) { r.duplicateInFile++; continue; }
+      const fallback = hit || isRef ? undefined : byNameOrg.get(nameOrgKey(c.name, c.org));
+      const prior = hit ?? (fallback && !seen.has(fallback.id) ? fallback : undefined);
       const shared = {
         person_key: key, source_row: row, name: c.name, org: c.org, role: c.role, country: c.country,
         email: c.email, email_confidence: c.email_confidence, linkedin_url: c.linkedin_url,
@@ -115,12 +119,15 @@ export function importSheet(db: DB, fileName: string, sheet: Sheet, cfg: TabConf
 
       if (prior) {
         seen.add(prior.id);
-        const next = { ...shared, message: prior.message === prior.message_src ? c.message : prior.message };
+        // a corrected key may already belong to another contact in this list: keep the old key then
+        const keyTaken = prior !== hit && db.prepare('SELECT 1 FROM contacts WHERE list_id = ? AND person_key = ? AND id <> ?').get(listId, key, prior.id);
+        const next = { ...shared, ...(keyTaken ? { person_key: prior.person_key } : {}), message: prior.message === prior.message_src ? c.message : prior.message };
         const cols = Object.keys(next) as (keyof typeof next)[];
         if (cols.every(k => prior[k] === next[k])) { r.unchanged++; continue; }
         db.prepare(`UPDATE contacts SET ${cols.map(k => `${k} = ?`).join(', ')} WHERE id = ?`).run(...cols.map(k => next[k]), prior.id);
         const fresh = getById.get(prior.id) as Contact;
-        byKey.set(key, fresh);
+        if (fresh.person_key !== prior.person_key) byKey.delete(prior.person_key);
+        byKey.set(fresh.person_key, fresh);
         byNameOrg.set(nameOrgKey(c.name, c.org), fresh);
         r.updated++;
         continue;

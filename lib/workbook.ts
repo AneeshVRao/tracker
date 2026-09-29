@@ -4,7 +4,7 @@ export type Sheet = { name: string; headers: string[]; rows: { row: number; valu
 
 export function cellText(v: ExcelJS.CellValue | undefined): string {
   if (v == null) return '';
-  if (v instanceof Date) return v.toISOString().slice(0, 10);
+  if (v instanceof Date) return Number.isNaN(+v) ? '' : v.toISOString().slice(0, 10);
   if (typeof v === 'object') {
     if ('richText' in v) return v.richText.map(t => t.text).join('');
     if ('formula' in v || 'sharedFormula' in v) return cellText((v as ExcelJS.CellFormulaValue).result as ExcelJS.CellValue);

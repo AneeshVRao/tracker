@@ -28,6 +28,7 @@ describe.skipIf(!available)('real workbooks (spec F1 acceptance)', () => {
     expect(first.map(r => [r.sheet, r.inserted, r.noName])).toEqual([
       ['Professors', 250, 0], ['Formal Programmes', 30, 0], ['Contacts', 466, 0], ['Alumni Pipeline', 234, 0], ['Verified - not working', 50, 0],
     ]);
+    expect(first.map(r => r.duplicateInFile)).toEqual([0, 0, 0, 0, 0]);
     const lists = db.prepare('SELECT source_sheet, mapping FROM lists').all() as { source_sheet: string; mapping: string }[];
     const prof = JSON.parse(lists.find(l => l.source_sheet === 'Professors')!.mapping);
     expect(prof).toMatchObject({ status: 'Status', message: 'Specific Email Angle' });

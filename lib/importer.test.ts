@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import { openDb, type Contact, type DB, type EventRow } from './db';
 import { importSheet, previewSheets } from './importer';
 import { DEFAULT_SETTINGS as settings } from './rules';
-import { readWorkbook, type Sheet } from './workbook';
+import { cellText, readWorkbook, type Sheet } from './workbook';
 
 const now = new Date('2026-09-29T06:00:00Z');
 const PROF = [
@@ -39,7 +39,26 @@ describe('readWorkbook', () => {
   });
 });
 
+describe('cellText', () => {
+  test('invalid Date yields empty string', () => {
+    expect(cellText(new Date('nope'))).toBe('');
+    expect(cellText(new Date('2026-09-20T00:00:00Z'))).toBe('2026-09-20');
+  });
+});
+
 describe('previewSheets', () => {
+  test('missing mapped and exclude columns are reported and dropped from the mapping', async () => {
+    const db = openDb(':memory:');
+    importAll(db, 'prof.xlsx', await book({ Professors: PROF }));
+    const renamed = PROF.map((r, i) => r.map(c => (i === 0 ? c.replace(/^Status$/, 'Stage').replace(/^Notes$/, 'Remarks') : c)));
+    const [t] = previewSheets(db, 'prof.xlsx', await book({ Professors: renamed }));
+    expect(t.missingColumns).toEqual(expect.arrayContaining(['status', 'exclude']));
+    expect(t.mapping.status).toBeUndefined();
+    expect(t.mapping.exclude).toBeUndefined();
+  });
+});
+
+describe('previewSheets (guesses)', () => {
   test('guesses include, kind, channel, mapping, exclude', async () => {
     const db = openDb(':memory:');
     const tabs = previewSheets(db, 'prof.xlsx', await book({ 'Read me first': README, Professors: PROF, 'Formal Programmes': PROGS }));
@@ -111,5 +130,39 @@ describe('importSheet', () => {
     expect(t).toMatchObject({ match: 'headers', existingListId: 1 });
     const r = importSheet(db, 'other.xlsx', sheets[0], { ...t, existingListId: null, listName: 'Other' }, { now, settings });
     expect(r).toMatchObject({ inserted: 1, noName: 1, crossListDupes: 1 });
+  });
+
+  test('duplicate row in the same file is skipped and counted', async () => {
+    const db = openDb(':memory:');
+    const [r] = importAll(db, 'prof.xlsx', await book({ Professors: [...PROF, PROF[1]] }));
+    expect(r).toMatchObject({ inserted: 3, updated: 0, duplicateInFile: 1 });
+  });
+
+  test('different person with same name+org (different email) is inserted, not merged into the earlier row', async () => {
+    const db = openDb(':memory:');
+    const twin = [...PROF[1]]; twin[7] = 'other@iitx.ac.in (VERIFIED - page)';
+    const [r] = importAll(db, 'prof.xlsx', await book({ Professors: [...PROF, twin] }));
+    expect(r).toMatchObject({ inserted: 4, updated: 0, duplicateInFile: 0 });
+  });
+
+  test('re-import via UPDATE path keeps status, notes, follow-up and events', async () => {
+    const db = openDb(':memory:');
+    importAll(db, 'prof.xlsx', await book({ Professors: PROF }));
+    db.prepare("UPDATE contacts SET status = 'sent', my_notes = 'n', follow_up_on = '2026-10-10' WHERE name = 'Prof A'").run();
+    const events = () => (db.prepare('SELECT COUNT(*) AS n FROM events').get() as { n: number }).n;
+    const before = events();
+    const changed = PROF.map(r => r.map(c => (c === 'Angle A' ? 'Angle A v2' : c)));
+    const [r] = importAll(db, 'prof.xlsx', await book({ Professors: changed }));
+    expect(r.updated).toBe(1);
+    expect(byName(db, 'Prof A')).toMatchObject({ status: 'sent', my_notes: 'n', follow_up_on: '2026-10-10', message_src: 'Angle A v2' });
+    expect(events()).toBe(before);
+  });
+
+  test('unknown existingListId throws before writing', async () => {
+    const db = openDb(':memory:');
+    const sheets = await book({ Professors: PROF });
+    const [t] = previewSheets(db, 'prof.xlsx', sheets);
+    expect(() => importSheet(db, 'prof.xlsx', sheets[0], { ...t, existingListId: 99 }, { now, settings })).toThrow('List 99 not found');
+    expect((db.prepare('SELECT COUNT(*) AS n FROM contacts').get() as { n: number }).n).toBe(0);
   });
 });
