@@ -55,6 +55,7 @@ CREATE TABLE lists (
   source_file TEXT NOT NULL,           -- base file name
   source_sheet TEXT NOT NULL,
   header_sig TEXT NOT NULL,            -- sha1 of normalised header row (rename hint only)
+  headers TEXT NOT NULL DEFAULT '[]',  -- JSON original header order (export, placeholders)
   mapping TEXT NOT NULL,               -- JSON: core field -> source column, + exclude rule
   templates TEXT NOT NULL DEFAULT '{}',-- JSON: subject, body, followup1, followup2, after_accept
   imported_at TEXT NOT NULL
@@ -201,7 +202,7 @@ Sidebar: Today · Contacts · Session · Intros · Stats · Lists (import, mappi
 ## 11. Architecture
 
 - Next.js (App Router, TypeScript), server components for reads, server actions for mutations. Runs with `npm run dev` / `npm start` bound to `127.0.0.1`.
-- `lib/db.ts` — `import 'server-only'`; opens `data/tracker.db` with `node:sqlite` as a singleton cached on `globalThis` (survives dev hot-reload), runs `schema.sql` once, WAL mode, `foreign_keys=ON`. **Risk, de-risked first (M1 task 1):** a spike confirming Next leaves `node:sqlite` external (add to `serverExternalPackages` if needed), that pages using it render in dev and `next build`, and whether Node 24.15 prints an ExperimentalWarning (acceptable). Fallback if the spike fails: `better-sqlite3` with the same `lib/db.ts` interface.
+- `lib/db.ts` — imported only from server files (server components, `app/actions.ts`, route handlers); `server-only` is omitted because it breaks vitest; `lib/schema.sql` is inlined as `SCHEMA` in `lib/db.ts`; opens `data/tracker.db` with `node:sqlite` as a singleton cached on `globalThis` (survives dev hot-reload), runs `schema.sql` once, WAL mode, `foreign_keys=ON`. **Risk, de-risked first (M1 task 1):** a spike confirming Next leaves `node:sqlite` external (add to `serverExternalPackages` if needed), that pages using it render in dev and `next build`, and whether Node 24.15 prints an ExperimentalWarning (acceptable). Fallback if the spike fails: `better-sqlite3` with the same `lib/db.ts` interface.
 - `lib/parse.ts` — pure normalisers (§7.4). `lib/rules.ts` — status machine, follow-up dates, limits, queue order, best-time. `lib/importer.ts` — workbook → rows → upsert. `lib/template.ts` — placeholder rendering. `lib/stats.ts` — SQL aggregations.
 - `exceljs` for reading and export. No other runtime deps beyond Next/React.
 - `data/` and `*.xlsx` are gitignored (personal contact data).
