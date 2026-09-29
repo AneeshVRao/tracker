@@ -52,9 +52,9 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
         <form action={bulkForm} className="flex min-h-0 flex-1 flex-col">
           <div className="flex items-center gap-2 border-b border-line px-3 py-2 text-muted">
             <span>Selected:</span>
-            <button name="op" value="skip" className="btn">Skip</button>
             <input type="date" name="date" className="input" aria-label="Follow-up date for selected" />
             <button name="op" value="followup" className="btn">Set follow-up</button>
+            <button name="op" value="skip" className="btn">Skip</button>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto">
             <table className="w-full text-left">

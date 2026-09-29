@@ -19,8 +19,9 @@ export async function saveNotes(id: number, text: string) { q.setNotes(getDb(), 
 export async function bulkForm(fd: FormData) {
   const ids = fd.getAll('ids').map(Number).filter(Number.isInteger);
   const date = String(fd.get('date') ?? '');
-  if (fd.get('op') === 'followup' && date) q.bulkFollowUp(getDb(), ids, date);
-  else q.bulkSkip(getDb(), ids);
+  const op = fd.get('op');
+  if (op === 'skip') q.bulkSkip(getDb(), ids);
+  else if (op === 'followup' && date) q.bulkFollowUp(getDb(), ids, date);
   refresh();
 }
 

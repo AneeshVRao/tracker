@@ -20,12 +20,15 @@ export function Composer(p: Props) {
   const blocked = hasBlockers(text) || (over && !override);
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(''), 2500); };
 
-  const copy = async () => { await navigator.clipboard.writeText(text); flash('Copied'); };
+  const write = async () => {
+    try { await navigator.clipboard.writeText(text); return true; } catch { flash("Couldn't copy — select the text and copy manually"); return false; }
+  };
+  const copy = async () => { if (await write()) flash('Copied'); };
   const open = async () => {
     if (p.channel === 'linkedin') { if (p.linkedinUrl) window.open(p.linkedinUrl, '_blank', 'noopener'); return; }
     if (!p.to) return;
     const { url, bodyCopied } = gmailComposeUrl(p.to, p.subject, text);
-    if (bodyCopied) { await navigator.clipboard.writeText(text); flash('Body copied. Paste it into Gmail.'); }
+    if (bodyCopied && (await write())) flash('Body copied. Paste it into Gmail.');
     window.open(url, '_blank', 'noopener');
   };
 

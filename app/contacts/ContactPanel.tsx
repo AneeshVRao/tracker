@@ -41,7 +41,7 @@ export function ContactPanel({ d, closeHref }: { d: ContactDetail; closeHref: st
       </header>
 
       {channel && (
-        <ContactActions id={c.id} actions={allowedActions(c, channel)} outcomes={outcomesFor(c, channel)} canUndo={canUndo} />
+        <ContactActions key={c.id} id={c.id} actions={allowedActions(c, channel)} outcomes={outcomesFor(c, channel)} canUndo={canUndo} />
       )}
 
       {channel && (
@@ -55,7 +55,7 @@ export function ContactPanel({ d, closeHref }: { d: ContactDetail; closeHref: st
 
       <div className="grid grid-cols-[7rem_1fr] items-center gap-2">
         <span className="text-muted">Follow up on</span>
-        <FollowUp key={`f${c.id}${c.follow_up_on}`} id={c.id} value={c.follow_up_on} />
+        <FollowUp key={`f${c.id}`} id={c.id} value={c.follow_up_on} />
       </div>
       <Notes key={`n${c.id}`} id={c.id} value={c.my_notes} />
 
