@@ -17,8 +17,6 @@ export const DEFAULT_SETTINGS = {
 };
 export type Settings = typeof DEFAULT_SETTINGS;
 
-export const OPEN_STATUSES: Status[] = ['to_contact', 'sent', 'accepted', 'replied', 'conversation'];
-
 export const STATUS_LABEL: Record<Status, string> = {
   to_contact: 'To contact', sent: 'Sent', accepted: 'Accepted', replied: 'Replied',
   conversation: 'In conversation', closed: 'Closed', skipped: 'Skipped', reference: 'Reference',

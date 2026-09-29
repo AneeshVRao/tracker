@@ -4,17 +4,17 @@ Spec: [specs/2026-09-29-outreach-tracker-design.md](specs/2026-09-29-outreach-tr
 
 ## M1 Core loop — [plan](plans/2026-09-29-m1-core-loop.md)
 
-- [ ] 1. Scaffold + `node:sqlite` spike + DB layer
-- [ ] 2. Cell normalisers (`lib/parse.ts`)
-- [ ] 3. Column auto-mapping (`lib/mapping.ts`)
-- [ ] 4. Status machine and dates (`lib/rules.ts`)
-- [ ] 5. Templates (`lib/template.ts`)
-- [ ] 6. Workbook reader + importer, incl. real-data acceptance test
-- [ ] 7. Queries, actions, undo, export
-- [ ] 8. App shell, server actions, import wizard
-- [ ] 9. Contacts table + contact panel + composer
-- [ ] 10. Lists, template editor, export download
-- [ ] 11. Design pass (taste-skill), acceptance run, ponytail review
+- [x] 1. Scaffold + `node:sqlite` spike + DB layer
+- [x] 2. Cell normalisers (`lib/parse.ts`)
+- [x] 3. Column auto-mapping (`lib/mapping.ts`)
+- [x] 4. Status machine and dates (`lib/rules.ts`)
+- [x] 5. Templates (`lib/template.ts`)
+- [x] 6. Workbook reader + importer, incl. real-data acceptance test
+- [x] 7. Queries, actions, undo, export
+- [x] 8. App shell, server actions, import wizard
+- [x] 9. Contacts table + contact panel + composer
+- [x] 10. Lists, template editor, export download
+- [x] 11. Design pass (taste-skill), acceptance run, ponytail review
 
 **Done when:** all three workbooks import as 250 / 30 (reference) / 466 / 234 / 50 with 11 professors skipped; re-import changes nothing; copy → open → mark sent → undo works; export opens in Excel.
 
