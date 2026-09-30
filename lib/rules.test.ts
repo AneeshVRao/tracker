@@ -10,6 +10,10 @@ const after = (s: State, patch: Partial<State>): State => ({ ...s, ...patch });
 describe('dates', () => {
   test('todayIn respects timezone', () => expect(todayIn('Asia/Kolkata', new Date('2026-09-29T20:00:00Z'))).toBe('2026-09-30'));
   test('addDays crosses months', () => expect(addDays('2026-09-29', 7)).toBe('2026-10-06'));
+  test('a past manual deadline falls back to parsed dates', () => {
+    expect(nextDeadline(['2026-11-30'], '2026-09-01', today)).toBe('2026-11-30');
+    expect(nextDeadline([], '2026-09-01', today)).toBeNull();
+  });
   test('nextDeadline: manual wins, else earliest upcoming', () => {
     expect(nextDeadline(['2026-04-03', '2026-11-30'], null, today)).toBe('2026-11-30');
     expect(nextDeadline(['2026-04-03'], null, today)).toBeNull();

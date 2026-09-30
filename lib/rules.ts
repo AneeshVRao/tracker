@@ -53,9 +53,9 @@ export function addDays(iso: string, n: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-// `dates` must be sorted ascending.
+// `dates` must be sorted ascending. A manual date only wins while it is still upcoming.
 export const nextDeadline = (dates: string[], manual: string | null, today: string) =>
-  manual ?? dates.find(d => d >= today) ?? null;
+  (manual && manual >= today ? manual : null) ?? dates.find(d => d >= today) ?? null;
 
 // ---- status machine (spec §8) ----------------------------------------------
 export function allowedActions(s: State, ch: Channel): Action[] {

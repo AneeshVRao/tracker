@@ -206,3 +206,15 @@ describe('saveSettings', () => {
     expect(db.prepare('SELECT COUNT(*) AS n FROM settings').get()).toEqual({ n: 0 });
   });
 });
+
+describe('deadline filter', () => {
+  test('within N days uses the next deadline (manual if upcoming, else parsed)', () => {
+    const db = seed();
+    db.prepare("UPDATE contacts SET deadline_dates = '[\"2026-10-05\"]' WHERE id = 1").run();
+    db.prepare("UPDATE contacts SET deadline_dates = '[\"2026-12-01\"]', deadline_manual = '2026-10-02' WHERE id = 2").run();
+    db.prepare("UPDATE contacts SET deadline_dates = '[\"2026-10-03\"]', deadline_manual = '2026-09-01' WHERE id = 3").run();
+    expect(listContacts(db, { within: 7 }, now).rows.map(r => r.id)).toEqual([1, 2, 3]);
+    expect(listContacts(db, { within: 5 }, now).rows.map(r => r.id)).toEqual([2, 3]);
+    expect(listContacts(db, { within: 7, list: 1 }, now).total).toBe(2);
+  });
+});

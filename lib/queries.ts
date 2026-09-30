@@ -1,6 +1,6 @@
 import type { SQLInputValue } from 'node:sqlite';
 import { tx, type Contact, type DB, type EventRow, type List } from './db';
-import { applyAction, DEFAULT_SETTINGS, OPEN_STATUSES, todayIn, type Action, type EventType, type Outcome, type Settings, type Status } from './rules';
+import { addDays, applyAction, DEFAULT_SETTINGS, OPEN_STATUSES, todayIn, type Action, type EventType, type Outcome, type Settings, type Status } from './rules';
 import { norm } from './parse';
 import type { TemplateSet } from './template';
 import { activityStats, orgsSentToday } from './today';
@@ -43,7 +43,7 @@ export function saveSettings(db: DB, input: Record<string, string>) {
 
 // ---- reads -----------------------------------------------------------------
 export const PAGE_SIZE = 100;
-export type Filters = { list?: number; status?: string; q?: string; priority?: number; conf?: string; col?: string; val?: string; sort?: string; page?: number };
+export type Filters = { list?: number; status?: string; q?: string; priority?: number; conf?: string; within?: number; col?: string; val?: string; sort?: string; page?: number };
 const SORTS: Record<string, string> = {
   priority: 'priority DESC, list_id, source_row, id',
   name: 'name COLLATE NOCASE, id',
@@ -51,7 +51,7 @@ const SORTS: Record<string, string> = {
   follow: 'follow_up_on IS NULL, follow_up_on, id',
 };
 
-export function listContacts(db: DB, f: Filters): { rows: Contact[]; total: number } {
+export function listContacts(db: DB, f: Filters, now = new Date()): { rows: Contact[]; total: number } {
   const where = ["status <> 'reference'"];
   const args: SQLInputValue[] = [];
   const add = (sql: string, ...v: SQLInputValue[]) => { where.push(sql); args.push(...v); };
@@ -61,6 +61,13 @@ export function listContacts(db: DB, f: Filters): { rows: Contact[]; total: numb
   if (f.priority) add('priority = ?', f.priority);
   if (f.conf === 'none') where.push('email IS NULL');
   else if (f.conf) add('email_confidence = ?', f.conf);
+  if (f.within) {
+    const today = todayIn(getSettings(db).my_timezone, now);
+    const limit = addDays(today, f.within);
+    add(`((deadline_manual >= ? AND deadline_manual <= ?)
+      OR ((deadline_manual IS NULL OR deadline_manual < ?) AND EXISTS (SELECT 1 FROM json_each(deadline_dates) WHERE value >= ? AND value <= ?)))`,
+      today, limit, today, today, limit);
+  }
   const like = (s: string) => `%${s.replace(/[\\%_]/g, '\\$&')}%`;
   if (f.q) { const l = like(f.q); add("(name LIKE ? ESCAPE '\\' OR org LIKE ? ESCAPE '\\' OR role LIKE ? ESCAPE '\\' OR message LIKE ? ESCAPE '\\')", l, l, l, l); }
   if (f.col && f.val && listHeaders(db, f.list).includes(f.col)) add("json_extract(extra, ?) LIKE ? ESCAPE '\\'", `$."${f.col.replaceAll('"', '')}"`, like(f.val));
