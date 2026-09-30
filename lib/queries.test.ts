@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { openDb, type DB } from './db';
-import { bulkFollowUp, bulkSkip, editContact, getContactDetail, getSettings, listContacts, listSummaries, performAction, undoLast } from './queries';
+import { bulkFollowUp, bulkSkip, closeStale, editContact, getContactDetail, getSettings, listContacts, LimitError, listSummaries, performAction, undoLast } from './queries';
 
 const now = new Date('2026-09-29T06:00:00Z'); // 11:30 in Asia/Kolkata → today 2026-09-29
 
@@ -131,5 +131,43 @@ describe('settings and bulk follow-up', () => {
     expect(bulkFollowUp(db, [1, 2], '2026-10-10', now)).toBe(1);
     expect(getContactDetail(db, 1)!.contact.follow_up_on).toBe('2026-10-10');
     expect(getContactDetail(db, 2)!.contact.follow_up_on).toBeNull();
+  });
+});
+
+describe('limits and daily helpers', () => {
+  test('linkedin cap blocks at 100%; override sends and logs limit_override', () => {
+    const db = seed();
+    db.prepare("INSERT INTO settings (key, value) VALUES ('weekly_invite_cap', '1')").run();
+    db.prepare("INSERT INTO contacts (list_id, person_key, source_row, name, org, priority, status, extra) VALUES (2, 'k4', 3, 'Al', 'Acme', 2, 'to_contact', '{}')").run();
+    performAction(db, 3, 'sent', undefined, now);
+    expect(() => performAction(db, 4, 'sent', undefined, now)).toThrow(LimitError);
+    expect(getContactDetail(db, 4, now)!.contact.status).toBe('to_contact');
+    performAction(db, 4, 'sent', undefined, now, { override: true });
+    const d = getContactDetail(db, 4, now)!;
+    expect(d.contact.status).toBe('sent');
+    expect(d.events.map(e => e.type)).toEqual(['sent', 'limit_override']);
+    expect(d.invites).toEqual({ used: 2, cap: 1 });
+  });
+  test('email sends ignore the linkedin cap', () => {
+    const db = seed();
+    db.prepare("INSERT INTO settings (key, value) VALUES ('weekly_invite_cap', '1')").run();
+    performAction(db, 3, 'sent', undefined, now);
+    performAction(db, 1, 'sent', undefined, now);
+    expect(getContactDetail(db, 1, now)!.contact.status).toBe('sent');
+  });
+  test('detail reports same-org sends today and the company max', () => {
+    const db = seed();
+    performAction(db, 1, 'sent', undefined, now); // Prof A @ IIT X (email)
+    expect(getContactDetail(db, 3, now)).toMatchObject({ orgSentToday: 1, companyMax: 1 }); // also IIT X
+    expect(getContactDetail(db, 2, now)!.orgSentToday).toBe(0);
+    expect(getContactDetail(db, 1, now)!.invites).toBeNull();
+  });
+  test('closeStale closes due email contacts at step 3 only', () => {
+    const db = seed();
+    db.prepare("UPDATE contacts SET status = 'sent', followup_step = 3, follow_up_on = '2026-09-20' WHERE id = 1").run();
+    db.prepare("UPDATE contacts SET status = 'sent', followup_step = 2, follow_up_on = '2026-09-20' WHERE id = 2").run();
+    expect(closeStale(db, now)).toBe(1);
+    expect(getContactDetail(db, 1, now)!.contact).toMatchObject({ status: 'closed', outcome: 'no_reply' });
+    expect(getContactDetail(db, 2, now)!.contact.status).toBe('sent');
   });
 });

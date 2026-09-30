@@ -11,7 +11,19 @@ import { readWorkbook } from '@/lib/workbook';
 const refresh = () => revalidatePath('/', 'layout');
 const message = (e: unknown) => (e instanceof Error ? e.message : 'Something went wrong');
 
-export async function actContact(id: number, action: Action, outcome?: Outcome) { q.performAction(getDb(), id, action, outcome); refresh(); }
+export type ActResult = { ok: true } | { ok: false; limit: { used: number; cap: number } } | { ok: false; error: string };
+
+export async function actContact(id: number, action: Action, outcome?: Outcome, override = false): Promise<ActResult> {
+  try {
+    q.performAction(getDb(), id, action, outcome, new Date(), { override });
+    return { ok: true };
+  } catch (e) {
+    if (e instanceof q.LimitError) return { ok: false, limit: { used: e.used, cap: e.cap } };
+    return { ok: false, error: message(e) };
+  } finally { refresh(); }
+}
+
+export async function closeStaleForm() { q.closeStale(getDb()); refresh(); }
 export async function undoContact(id: number) { const ok = q.undoLast(getDb(), id); refresh(); return ok; }
 export async function editContact(id: number, field: q.EditableField, value: string | null) { q.editContact(getDb(), id, field, value); refresh(); }
 export async function saveNotes(id: number, text: string) { q.setNotes(getDb(), id, text); }

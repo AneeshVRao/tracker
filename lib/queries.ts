@@ -1,7 +1,9 @@
 import type { SQLInputValue } from 'node:sqlite';
 import { tx, type Contact, type DB, type EventRow, type List } from './db';
 import { applyAction, DEFAULT_SETTINGS, OPEN_STATUSES, todayIn, type Action, type EventType, type Outcome, type Settings, type Status } from './rules';
+import { norm } from './parse';
 import type { TemplateSet } from './template';
+import { activityStats, orgsSentToday } from './today';
 
 export function getSettings(db: DB): Settings {
   const rows = db.prepare('SELECT key, value FROM settings').all() as { key: string; value: string }[];
@@ -61,14 +63,25 @@ export function listHeaders(db: DB, listId?: number): string[] {
   return [...new Set(rows.flatMap(r => JSON.parse(r.headers) as string[]))];
 }
 
-export type ContactDetail = { contact: Contact; list: List; events: EventRow[]; alsoIn: { list: string; status: Status }[]; canUndo: boolean };
-export function getContactDetail(db: DB, id: number): ContactDetail | null {
+export type ContactDetail = {
+  contact: Contact; list: List; events: EventRow[]; alsoIn: { list: string; status: Status }[]; canUndo: boolean;
+  invites: { used: number; cap: number } | null; orgSentToday: number; companyMax: number;
+};
+export function getContactDetail(db: DB, id: number, now = new Date()): ContactDetail | null {
   const contact = db.prepare('SELECT * FROM contacts WHERE id = ?').get(id) as Contact | undefined;
   if (!contact) return null;
+  const list = getList(db, contact.list_id)!;
+  const cfg = getSettings(db);
   const events = db.prepare('SELECT * FROM events WHERE contact_id = ? ORDER BY id DESC').all(id) as EventRow[];
   const alsoIn = db.prepare("SELECT l.name AS list, c.status FROM contacts c JOIN lists l ON l.id = c.list_id WHERE c.person_key = ? AND c.id <> ? AND c.status <> 'reference'")
     .all(contact.person_key, id) as ContactDetail['alsoIn'];
-  return { contact, list: getList(db, contact.list_id)!, events, alsoIn, canUndo: undoTarget(db, id) !== undefined };
+  const stats = list.channel === 'linkedin' ? activityStats(db, now, cfg) : null;
+  return {
+    contact, list, events, alsoIn, canUndo: undoTarget(db, id) !== undefined,
+    invites: stats && { used: stats.invitesWeek, cap: stats.cap },
+    orgSentToday: contact.org ? orgsSentToday(db, now, cfg).get(norm(contact.org)) ?? 0 : 0,
+    companyMax: cfg.company_daily_max,
+  };
 }
 
 // ---- writes ----------------------------------------------------------------
@@ -90,15 +103,37 @@ function writePatch(db: DB, c: Contact, patch: Record<string, SQLInputValue>, ty
   db.prepare('INSERT INTO events (contact_id, type, at, data) VALUES (?,?,?,?)').run(c.id, type, now.toISOString(), JSON.stringify({ ...data, prev }));
 }
 
-export function performAction(db: DB, id: number, action: Action, outcome?: Outcome, now = new Date()) {
+export class LimitError extends Error {
+  constructor(public used: number, public cap: number) {
+    super(`Weekly LinkedIn invite cap reached (${used}/${cap})`);
+  }
+}
+
+export function performAction(db: DB, id: number, action: Action, outcome?: Outcome, now = new Date(), opts: { override?: boolean } = {}) {
   tx(db, () => {
     const c = mustGet(db, id);
     const list = getList(db, c.list_id)!;
     if (list.kind !== 'contacts' || !list.channel) throw new Error('Reference rows have no actions');
     const cfg = getSettings(db);
+    if (action === 'sent' && list.channel === 'linkedin') {
+      const s = activityStats(db, now, cfg);
+      if (s.invitesWeek >= s.cap) {
+        if (!opts.override) throw new LimitError(s.invitesWeek, s.cap);
+        db.prepare("INSERT INTO events (contact_id, type, at, data) VALUES (?, 'limit_override', ?, ?)")
+          .run(c.id, now.toISOString(), JSON.stringify({ used: s.invitesWeek, cap: s.cap }));
+      }
+    }
     const { patch, event } = applyAction(c, list.channel, action, { today: todayIn(cfg.my_timezone, now), now: now.toISOString(), outcome }, cfg);
     writePatch(db, c, patch as Record<string, SQLInputValue>, event, { action, outcome: outcome ?? null }, now);
   });
+}
+
+export function closeStale(db: DB, now = new Date()): number {
+  const today = todayIn(getSettings(db).my_timezone, now);
+  const ids = (db.prepare(`SELECT c.id FROM contacts c JOIN lists l ON l.id = c.list_id
+    WHERE l.channel = 'email' AND c.status = 'sent' AND c.followup_step >= 3 AND c.follow_up_on <= ?`).all(today) as { id: number }[]).map(r => r.id);
+  for (const id of ids) performAction(db, id, 'close', 'no_reply', now);
+  return ids.length;
 }
 
 const undoTarget = (db: DB, id: number) =>

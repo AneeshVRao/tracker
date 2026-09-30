@@ -41,7 +41,7 @@ export function ContactPanel({ d, closeHref }: { d: ContactDetail; closeHref: st
       </header>
 
       {channel && (
-        <ContactActions key={c.id} id={c.id} actions={allowedActions(c, channel)} outcomes={outcomesFor(c, channel)} canUndo={canUndo} />
+        <ContactActions key={c.id} id={c.id} actions={allowedActions(c, channel)} outcomes={outcomesFor(c, channel)} canUndo={canUndo} invites={d.invites} org={c.org} orgSentToday={d.orgSentToday} companyMax={d.companyMax} />
       )}
 
       {channel && (
