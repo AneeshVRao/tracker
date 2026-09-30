@@ -115,7 +115,7 @@ export async function saveSettingsAction(_prev: unknown, fd: FormData): Promise<
 
 export async function markIntroAsked(ids: number[], mutual: string): Promise<{ ok: boolean; message: string }> {
   try {
-    if (!Array.isArray(ids) || !ids.every(Number.isInteger) || typeof mutual !== 'string' || !mutual.trim()) throw new Error('Invalid request');
+    if (!Array.isArray(ids) || !ids.length || !ids.every(Number.isInteger) || typeof mutual !== 'string' || !mutual.trim()) throw new Error('Invalid request');
     q.markIntroRequested(getDb(), ids, mutual.trim());
     return { ok: true, message: `Logged intro request for ${ids.length}.` };
   } catch (e) { return { ok: false, message: message(e) }; }

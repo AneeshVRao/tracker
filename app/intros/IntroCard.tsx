@@ -3,8 +3,10 @@
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { markIntroAsked } from '@/app/actions';
+import { StatusChip } from '@/app/ui';
+import type { Status } from '@/lib/rules';
 
-type C = { id: number; name: string; org: string | null; role: string | null; list_name: string; asked_at: string | null };
+type C = { id: number; name: string; org: string | null; role: string | null; list_name: string; asked_at: string | null; status: Status };
 
 export function IntroCard({ mutual, contacts }: { mutual: string; contacts: C[] }) {
   const first = mutual.split(/\s+/)[0];
@@ -16,10 +18,14 @@ export function IntroCard({ mutual, contacts }: { mutual: string; contacts: C[] 
   const [pending, start] = useTransition();
   const lastAsked = contacts.map(c => c.asked_at).filter(Boolean).sort().at(-1);
 
-  const copy = async () => {
-    try { await navigator.clipboard.writeText(text); setMsg({ ok: true, text: 'Copied.' }); }
-    catch { setMsg({ ok: false, text: "Couldn't copy — select the text and copy manually." }); }
-  };
+  const copyAndLog = () => start(async () => {
+    try { await navigator.clipboard.writeText(text); }
+    catch { setMsg({ ok: false, text: "Couldn't copy — select the text and copy manually." }); return; }
+    try {
+      const r = await markIntroAsked(contacts.map(c => c.id), mutual);
+      setMsg({ ok: r.ok, text: r.ok ? 'Copied and logged.' : r.message });
+    } catch { setMsg({ ok: false, text: "Couldn't log — try again." }); }
+  });
 
   return (
     <section className="card space-y-3 p-4">
@@ -33,16 +39,13 @@ export function IntroCard({ mutual, contacts }: { mutual: string; contacts: C[] 
           <li key={c.id}>
             <Link href={`/contacts?open=${c.id}`} className="font-medium hover:text-accent">{c.name}</Link>
             <span className="text-muted"> · {[c.role, c.org, c.list_name].filter(Boolean).join(' · ')}</span>
+            {' '}<StatusChip s={c.status} />
           </li>
         ))}
       </ul>
       <textarea value={text} onChange={e => setText(e.target.value)} rows={5} className="input w-full text-[13px] leading-relaxed" aria-label={`Intro request to ${mutual}`} />
       <div className="flex flex-wrap items-center gap-1.5">
-        <button type="button" className="btn-primary" onClick={copy}>Copy message</button>
-        <button type="button" className="btn" disabled={pending} onClick={() => start(async () => {
-          const r = await markIntroAsked(contacts.map(c => c.id), mutual);
-          setMsg({ ok: r.ok, text: r.message });
-        })}>Mark as asked</button>
+        <button type="button" className="btn-primary" disabled={pending} onClick={copyAndLog}>Copy &amp; log request</button>
         {msg && <span role={msg.ok ? 'status' : 'alert'} className={`text-xs ${msg.ok ? 'text-good' : 'text-bad'}`}>{msg.text}</span>}
       </div>
     </section>
