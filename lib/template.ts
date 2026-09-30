@@ -1,3 +1,4 @@
+import type { Contact, List } from './db';
 import type { Channel, Status } from './rules';
 
 export type TemplateSet = { subject: string; body: string; followup1: string; followup2: string; after_accept: string };
@@ -81,4 +82,21 @@ export function gmailComposeUrl(to: string, subject: string, body: string, max =
   const base = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent(subject)}`;
   const enc = encodeURIComponent(body);
   return enc.length > max ? { url: base, bodyCopied: true } : { url: `${base}&body=${enc}`, bodyCopied: false };
+}
+
+export type Composed = { key: TemplateKey; subject: string; body: string; canSaveMessage: boolean };
+
+export function composeFor(
+  c: Pick<Contact, 'name' | 'org' | 'role' | 'message' | 'extra' | 'status' | 'followup_step'>,
+  list: Pick<List, 'channel' | 'templates'>,
+): Composed | null {
+  if (!list.channel) return null;
+  const tpl = JSON.parse(list.templates) as Partial<TemplateSet>;
+  const key = pickTemplate(c.status, c.followup_step, list.channel);
+  const ctx = { name: c.name, org: c.org, role: c.role, message: c.message, extra: JSON.parse(c.extra) as Record<string, string> };
+  const subject = list.channel === 'email' ? render(key === 'body' ? tpl.subject ?? '' : `Re: ${tpl.subject ?? ''}`, ctx).text : '';
+  return {
+    key, subject, body: render(tpl[key] ?? '', ctx).text,
+    canSaveMessage: list.channel === 'linkedin' && key === 'body' && (tpl.body ?? '').trim() === '{{message}}',
+  };
 }

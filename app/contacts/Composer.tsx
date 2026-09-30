@@ -39,11 +39,11 @@ export function Composer(p: Props) {
       {p.channel === 'linkedin' && !p.linkedinUrl && <p className="text-xs text-bad">No LinkedIn URL in the sheet.</p>}
       {p.firstEmail && <p className="text-xs text-muted">Attach your CV.</p>}
       {p.subject && <p><span className="label mr-1">Subject</span>{' '}{p.subject}</p>}
-      <textarea value={text} onChange={e => setText(e.target.value)} rows={p.channel === 'email' ? 14 : 6}
+      <textarea data-cmd="edit" value={text} onChange={e => setText(e.target.value)} rows={p.channel === 'email' ? 14 : 6}
         className="input w-full font-mono text-[12.5px] leading-relaxed" aria-label="Message" />
       <div className="flex flex-wrap items-center gap-1.5">
-        <button onClick={copy} disabled={blocked} className="btn-primary">Copy</button>
-        <button onClick={open} disabled={p.channel === 'email' ? !p.to || blocked : !p.linkedinUrl} className="btn">
+        <button data-cmd="copy" onClick={copy} disabled={blocked} className="btn-primary">Copy</button>
+        <button data-cmd="open" onClick={open} disabled={p.channel === 'email' ? !p.to || blocked : !p.linkedinUrl} className="btn">
           {p.channel === 'email' ? 'Open in Gmail' : 'Open LinkedIn'}
         </button>
         {p.canSaveMessage && text !== p.body && (

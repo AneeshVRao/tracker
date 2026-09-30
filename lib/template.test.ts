@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { DEFAULT_TEMPLATES, gmailComposeUrl, hasBlockers, pickTemplate, render } from './template';
+import { DEFAULT_TEMPLATES, composeFor, gmailComposeUrl, hasBlockers, pickTemplate, render } from './template';
 
 const ctx = { name: 'Prof. Jane Doe', org: 'IIT Bombay', role: 'Associate Professor', message: 'Your RECAST idea maps onto my retrieval work.', extra: { 'Most Relevant Paper(s)': 'RECAST', Empty: '' } };
 
@@ -45,4 +45,20 @@ describe('gmailComposeUrl', () => {
     expect(r.bodyCopied).toBe(true);
     expect(r.url).not.toContain('body=');
   });
+});
+
+describe('composeFor', () => {
+  const base = { name: 'Prof. Jane Doe', org: 'IIT Bombay', role: null, message: 'Angle', extra: JSON.stringify({ 'Most Relevant Paper(s)': 'RECAST' }), status: 'to_contact' as const, followup_step: 0 };
+  const email = { channel: 'email' as const, templates: JSON.stringify({ subject: 'Hi {{org}}', body: 'Dear {{last_name}}: {{message}}', followup1: 'Nudge {{last_name}}', followup2: 'Last {{last_name}}', after_accept: '' }) };
+  const linkedin = { channel: 'linkedin' as const, templates: JSON.stringify({ subject: '', body: '{{message}}', followup1: '', followup2: '', after_accept: 'Thanks {{first_name}}' }) };
+  test('email first message', () =>
+    expect(composeFor(base, email)).toEqual({ key: 'body', subject: 'Hi IIT Bombay', body: 'Dear Doe: Angle', canSaveMessage: false }));
+  test('email second nudge uses Re: subject', () =>
+    expect(composeFor({ ...base, status: 'sent', followup_step: 2 }, email)).toEqual({ key: 'followup2', subject: 'Re: Hi IIT Bombay', body: 'Last Jyothi', canSaveMessage: false }));
+  test('linkedin note is saveable; after-accept is not', () => {
+    expect(composeFor(base, linkedin)).toEqual({ key: 'body', subject: '', body: 'Angle', canSaveMessage: true });
+    expect(composeFor({ ...base, status: 'accepted', followup_step: 1 }, linkedin)!.key).toBe('after_accept');
+    expect(composeFor({ ...base, status: 'accepted', followup_step: 1 }, linkedin)!.canSaveMessage).toBe(false);
+  });
+  test('reference list → null', () => expect(composeFor(base, { channel: null, templates: '{}' })).toBeNull());
 });

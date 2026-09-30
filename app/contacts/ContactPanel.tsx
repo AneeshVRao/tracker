@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { StatusChip } from '@/app/ui';
 import type { ContactDetail } from '@/lib/queries';
 import { allowedActions, outcomesFor, OUTCOME_LABEL, STATUS_LABEL } from '@/lib/rules';
-import { pickTemplate, render, type TemplateSet } from '@/lib/template';
+import { composeFor } from '@/lib/template';
 import { Composer } from './Composer';
 import { ContactActions } from './ContactActions';
 import { FollowUp, Notes } from './Fields';
@@ -16,11 +16,7 @@ export function ContactPanel({ d, closeHref }: { d: ContactDetail; closeHref: st
   const { contact: c, list, events, alsoIn, canUndo } = d;
   const extra = JSON.parse(c.extra) as Record<string, string>;
   const channel = list.channel;
-  const tpl = { ...JSON.parse(list.templates) } as TemplateSet;
-  const key = channel ? pickTemplate(c.status, c.followup_step, channel) : 'body';
-  const ctx = { name: c.name, org: c.org, role: c.role, message: c.message, extra };
-  const body = render(tpl[key] ?? '', ctx).text;
-  const subject = channel === 'email' ? render(key === 'body' ? tpl.subject : `Re: ${tpl.subject}`, ctx).text : '';
+  const composed = composeFor(c, list);
 
   return (
     <div className="space-y-5 p-5 text-[13px]">
@@ -44,12 +40,12 @@ export function ContactPanel({ d, closeHref }: { d: ContactDetail; closeHref: st
         <ContactActions key={c.id} id={c.id} actions={allowedActions(c, channel)} outcomes={outcomesFor(c, channel)} canUndo={canUndo} invites={d.invites} org={c.org} orgSentToday={d.orgSentToday} companyMax={d.companyMax} />
       )}
 
-      {channel && (
+      {channel && composed && (
         <Composer
-          key={`${c.id}-${key}`}
+          key={`${c.id}-${composed.key}`}
           id={c.id} channel={channel} to={c.email} confidence={c.email_confidence} linkedinUrl={c.linkedin_url}
-          subject={subject} body={body} firstEmail={channel === 'email' && c.status === 'to_contact'}
-          canSaveMessage={channel === 'linkedin' && key === 'body' && tpl.body.trim() === '{{message}}'}
+          subject={composed.subject} body={composed.body} firstEmail={channel === 'email' && c.status === 'to_contact'}
+          canSaveMessage={composed.canSaveMessage}
         />
       )}
 
