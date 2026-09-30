@@ -7,7 +7,7 @@ const OPEN_SQL = `(${OPEN_STATUSES.map(s => `'${s}'`).join(',')})`;
 
 export type Listed = Contact & { list_name: string; channel: 'email' | 'linkedin' };
 export type DueKind = 'nudge' | 'close_stale' | 'message_after_accept' | 'withdraw' | 'check_in';
-export type QueueItem = Listed & { next_deadline: string | null };
+export type QueueItem = Listed & { next_deadline: string | null; dup_list: string | null };
 
 const LISTED = "SELECT c.*, l.name AS list_name, l.channel FROM contacts c JOIN lists l ON l.id = c.list_id WHERE l.kind = 'contacts'";
 
@@ -62,7 +62,12 @@ export function upcomingDeadlines(db: DB, today: string, within = 21): (Listed &
 
 export function buildQueue(db: DB, listIds: number[], now: Date, cfg: Settings): { items: QueueItem[]; deferred: number } {
   if (!listIds.length) return { items: [], deferred: 0 };
-  const rows = db.prepare(`${LISTED} AND c.status = 'to_contact' AND c.list_id IN (${listIds.map(() => '?').join(', ')})`).all(...listIds) as Listed[];
+  const rows = db.prepare(`SELECT c.*, l.name AS list_name, l.channel,
+      (SELECT l2.name FROM contacts c2 JOIN lists l2 ON l2.id = c2.list_id
+        WHERE c2.person_key = c.person_key AND c2.id <> c.id AND c2.status NOT IN ('to_contact','skipped','reference') LIMIT 1) AS dup_list
+    FROM contacts c JOIN lists l ON l.id = c.list_id
+    WHERE l.kind = 'contacts' AND c.status = 'to_contact' AND c.list_id IN (${listIds.map(() => '?').join(', ')})`)
+    .all(...listIds) as (Listed & { dup_list: string | null })[];
   const today = todayIn(cfg.my_timezone, now);
   const soon = addDays(today, 21);
   const sent = orgsSentToday(db, now, cfg);

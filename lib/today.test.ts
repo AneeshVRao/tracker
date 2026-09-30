@@ -109,3 +109,15 @@ describe('buildQueue', () => {
     expect(buildQueue(db, [], now, cfg)).toEqual({ items: [], deferred: 0 });
   });
 });
+
+describe('duplicates in queue', () => {
+  test('dup_list names another list where the same person was already contacted', () => {
+    const db = seed();
+    const a = contact(db, { list_id: 2, name: 'A', person_key: 'same' });
+    contact(db, { list_id: 1, name: 'A too', person_key: 'same', status: 'sent' });
+    const b = contact(db, { list_id: 2, name: 'B', person_key: 'solo' });
+    const q = buildQueue(db, [2], now, cfg);
+    expect(q.items.find(i => i.id === a)!.dup_list).toBe('Profs');
+    expect(q.items.find(i => i.id === b)!.dup_list).toBeNull();
+  });
+});

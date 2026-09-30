@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { openDb, type DB } from './db';
-import { bulkFollowUp, bulkSkip, closeStale, editContact, getContactDetail, getSettings, listContacts, LimitError, listSummaries, performAction, saveSettings, undoLast } from './queries';
+import { bulkFollowUp, bulkSkip, closeStale, editContact, getContactDetail, getSettings, listContacts, LimitError, listSummaries, markIntroRequested, performAction, saveSettings, undoLast } from './queries';
 
 const now = new Date('2026-09-29T06:00:00Z'); // 11:30 in Asia/Kolkata → today 2026-09-29
 
@@ -217,4 +217,13 @@ describe('deadline filter', () => {
     expect(listContacts(db, { within: 5 }, now).rows.map(r => r.id)).toEqual([2, 3]);
     expect(listContacts(db, { within: 7, list: 1 }, now).total).toBe(2);
   });
+});
+
+test('markIntroRequested logs one intro_requested event per contact, validating ids first', () => {
+  const db = seed();
+  expect(() => markIntroRequested(db, [1, 999], 'Priya', now)).toThrow();
+  expect(db.prepare("SELECT COUNT(*) AS n FROM events WHERE type = 'intro_requested'").get()).toEqual({ n: 0 });
+  expect(markIntroRequested(db, [1, 3], 'Priya', now)).toBe(2);
+  const e = db.prepare("SELECT contact_id, data FROM events WHERE type = 'intro_requested' ORDER BY contact_id").all() as { contact_id: number; data: string }[];
+  expect(e.map(x => [x.contact_id, JSON.parse(x.data).mutual])).toEqual([[1, 'Priya'], [3, 'Priya']]);
 });

@@ -229,3 +229,10 @@ export function bulkFollowUp(db: DB, ids: number[], date: string, now = new Date
 export function saveTemplates(db: DB, listId: number, t: TemplateSet) {
   db.prepare("UPDATE lists SET templates = ? WHERE id = ? AND kind = 'contacts'").run(JSON.stringify(t), listId);
 }
+
+export function markIntroRequested(db: DB, ids: number[], mutual: string, now = new Date()): number {
+  ids.forEach(id => mustGet(db, id));
+  const ins = db.prepare("INSERT INTO events (contact_id, type, at, data) VALUES (?, 'intro_requested', ?, ?)");
+  tx(db, () => { for (const id of ids) ins.run(id, now.toISOString(), JSON.stringify({ mutual })); });
+  return ids.length;
+}
