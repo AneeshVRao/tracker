@@ -15,6 +15,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="flex min-h-screen font-sans antialiased">
         <nav className="sticky top-0 flex h-screen w-40 shrink-0 flex-col gap-0.5 border-r border-line bg-panel p-3">
           <span className="mb-4 px-2 text-[13px] font-semibold tracking-tight">Outreach</span>
+          <Link href="/today" className="nav">Today</Link>
+          <Link href="/session" className="nav">Session</Link>
           <Link href="/contacts" className="nav">Contacts</Link>
           <Link href="/lists" className="nav">Lists</Link>
           <Link href="/import" className="nav">Import</Link>
