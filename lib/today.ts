@@ -1,9 +1,9 @@
 import type { Contact, DB } from './db';
 import { norm } from './parse';
-import { addDays, nextDeadline, todayIn, type Settings } from './rules';
+import { addDays, nextDeadline, OPEN_STATUSES, todayIn, type Settings } from './rules';
 
 const DAY = 86_400_000;
-const OPEN_SQL = "('to_contact','sent','accepted','replied','conversation')";
+const OPEN_SQL = `(${OPEN_STATUSES.map(s => `'${s}'`).join(',')})`;
 
 export type Listed = Contact & { list_name: string; channel: 'email' | 'linkedin' };
 export type DueKind = 'nudge' | 'close_stale' | 'message_after_accept' | 'withdraw' | 'check_in';

@@ -20,21 +20,18 @@ Spec: [specs/2026-09-29-outreach-tracker-design.md](specs/2026-09-29-outreach-tr
 
 ### Known follow-ups from M1 reviews (none block use)
 
-- Bulk "Set follow-up" also applies to closed/skipped contacts — limit to open statuses before the Today view (M2).
-- `conversation` / `checked_in` follow-ups hardcode +7 days instead of a setting (M2 settings page).
-- `DEFAULT_SETTINGS` is a shared mutable object — freeze or copy before adding the settings page.
 - Header auto-mapping: exact-match pass ignores synonym order; negative terms match substrings; a sheet with "Email Angle" but no Email column maps email→angle (the wizard shows it, fix by hand).
 - Deadline parsing: yearless/"may" false positives beyond the documented one; `parseDegree` misses multi-line cells.
-- Server actions other than import throw instead of returning `{ error }`; undo shows no message when there's nothing to undo.
+- Session: header's 'more after this batch' count drifts as you send (cosmetic); ←/→-passed contacts aren't revisited automatically.
 - Below 1280px the contact panel stacks above the table (tab order ≠ visual order); `next/font` fetches Geist at build time.
 
 ## M2 Daily driver — [plan](plans/2026-09-30-m2-daily-driver.md)
 
-- [ ] Today page (F2): deadlines, follow-ups due, replies waiting, next batch
-- [ ] Session mode (F5): keyboard queue `C O S K E U ← → Esc`
-- [ ] Follow-up sequence surfaced (F8): due lists, "close all stale"
-- [ ] LinkedIn safety (F7): weekly cap, company spacing, withdraw list
-- [ ] Settings page for §15 defaults
+- [x] Today page (F2): deadlines, follow-ups due, replies waiting, next batch
+- [x] Session mode (F5): keyboard queue `C O S K E U ← → Esc`
+- [x] Follow-up sequence surfaced (F8): due lists, "close all stale"
+- [x] LinkedIn safety (F7): weekly cap, company spacing, withdraw list
+- [x] Settings page for §15 defaults
 
 ## M3 Intelligence — plan to be written after M2 ships
 
