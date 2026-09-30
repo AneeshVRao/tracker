@@ -50,7 +50,8 @@ export default async function SessionPage({ searchParams }: { searchParams: Prom
     if (tz) {
       try {
         const good = inWindow(now, tz, cfg.send_window);
-        best = { tz, theirs: formatIn(now, tz), good, slotTheirs: good ? null : formatIn(nextSlot(now, tz, cfg.send_window), tz), slotMine: good ? null : formatIn(nextSlot(now, tz, cfg.send_window), cfg.my_timezone) };
+        const slot = good ? null : nextSlot(now, tz, cfg.send_window);
+        best = { tz, theirs: formatIn(now, tz), good, slotTheirs: slot && formatIn(slot, tz), slotMine: slot && formatIn(slot, cfg.my_timezone) };
       } catch { best = null; }
     }
     return {

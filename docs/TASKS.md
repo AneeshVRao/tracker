@@ -25,6 +25,7 @@ Spec: [specs/2026-09-29-outreach-tracker-design.md](specs/2026-09-29-outreach-tr
 - Session: header's 'more after this batch' count drifts as you send (cosmetic); ←/→-passed contacts aren't revisited automatically.
 - Below 1280px the contact panel stacks above the table (tab order ≠ visual order); `next/font` fetches Geist at build time.
 - `editContact` / `bulkForm` / `closeStaleForm` / `saveNotes` server actions still throw instead of returning `{ error }` (only `actContact` returns a result).
+- Best-time slots use a fixed Tue–Thu 09:00–11:00 window (send_window is not editable in Settings yet).
 
 ## M2 Daily driver — [plan](plans/2026-09-30-m2-daily-driver.md)
 
@@ -36,8 +37,8 @@ Spec: [specs/2026-09-29-outreach-tracker-design.md](specs/2026-09-29-outreach-tr
 
 ## M3 Intelligence — [plan](plans/2026-09-30-m3-intelligence.md)
 
-- [ ] Deadline radar (F9) incl. Formal Programmes reference list, manual deadline edit
-- [ ] Best time to send (F10), per-contact timezone override
-- [ ] Warm intro paths (F11)
-- [ ] What-gets-replies stats (F12)
-- [ ] Duplicate warnings across lists (F13) beyond the M1 badge
+- [x] Deadline radar (F9) incl. Formal Programmes reference list, manual deadline edit
+- [x] Best time to send (F10), per-contact timezone override
+- [x] Warm intro paths (F11)
+- [x] What-gets-replies stats (F12)
+- [x] Duplicate warnings across lists (F13) beyond the M1 badge
