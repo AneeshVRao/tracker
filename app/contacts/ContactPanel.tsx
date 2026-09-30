@@ -79,6 +79,7 @@ export function ContactPanel({ d, closeHref, settings, now }: { d: ContactDetail
       <section className="space-y-2 border-t border-line pt-4">
         <h3 className="label">Deadline</h3>
         {next ? <p className="text-xs">Next: <span className="font-medium">{next}</span> · in {days}d</p> : <p className="text-xs text-muted">No upcoming deadline.</p>}
+        {c.deadline_manual && c.deadline_manual < today && <p className="text-xs text-muted">Your date {c.deadline_manual} has passed — showing sheet dates.</p>}
         {c.deadline_text && <p className="text-xs text-muted">Sheet: {c.deadline_text}</p>}
         <DeadlineEditor key={`d${c.id}-${c.deadline_manual ?? ''}`} id={c.id} dates={dates} manual={c.deadline_manual} today={today} />
         {channel === 'email' && (

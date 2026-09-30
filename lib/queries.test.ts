@@ -217,6 +217,17 @@ describe('deadline filter', () => {
     expect(listContacts(db, { within: 5 }, now).rows.map(r => r.id)).toEqual([2, 3]);
     expect(listContacts(db, { within: 7, list: 1 }, now).total).toBe(2);
   });
+
+  const ids = (within: number, id: number, dl: string, manual: string | null) => {
+    const db = seed();
+    db.prepare('UPDATE contacts SET deadline_dates = ?, deadline_manual = ? WHERE id = ?').run(dl, manual, id);
+    return listContacts(db, { within }, now).rows.map(r => r.id).includes(id);
+  };
+  test('manual == today is included at within 1', () => expect(ids(1, 1, '[]', '2026-09-29')).toBe(true));
+  test('upcoming manual after the limit wins over an in-window parsed date', () =>
+    expect(ids(7, 1, '["2026-10-01"]', '2026-12-01')).toBe(false));
+  test('empty parsed dates with an upcoming manual date is included', () => expect(ids(7, 1, '[]', '2026-10-02')).toBe(true));
+  test('parsed date exactly at the limit is included', () => expect(ids(7, 1, '["2026-10-06"]', null)).toBe(true));
 });
 
 test('markIntroRequested logs one intro_requested event per contact, validating ids first', () => {

@@ -42,6 +42,21 @@ describe('statsBy', () => {
   });
 });
 
+describe('statsBy hardening', () => {
+  test('a reply timestamped before the send gives medianDays 0', () => {
+    const db = seed();
+    const a = contact(db, { list_id: 1, name: 'A' });
+    ev(db, a, 'sent', '2026-09-05T00:00:00.000Z'); ev(db, a, 'replied', '2026-09-01T00:00:00.000Z');
+    expect(statsBy(db, 'all')[0].medianDays).toBe(0);
+  });
+  test("col:constructor returns string keys only and does not throw", () => {
+    const db = seed();
+    const a = contact(db, { list_id: 1, name: 'A', extra: '{"Track":"HW"}' });
+    ev(db, a, 'sent', '2026-09-01T00:00:00.000Z');
+    expect(statsBy(db, 'col:constructor').map(r => r.key)).toEqual(['(blank)']);
+  });
+});
+
 describe('introGroups', () => {
   test('open contacts grouped by mutual (case-insensitive), biggest first, with last ask date', () => {
     const db = seed();

@@ -7,7 +7,7 @@ describe('tzFor', () => {
   test.each([
     ['India', null, 'Asia/Kolkata'], ['India / USA', null, 'Asia/Kolkata'], ['USA', null, 'America/New_York'],
     ['United Kingdom', null, 'Europe/London'], ['Hong Kong', null, 'Asia/Hong_Kong'], ['UK', 'Europe/Paris', 'Europe/Paris'],
-    ['Atlantis', null, null], [null, null, null],
+    ['Thailand', null, 'Asia/Bangkok'], ['Atlantis', null, null], [null, null, null],
   ] as const)('%s / %s → %s', (c, o, tz) => expect(tzFor(c, o)).toBe(tz));
 });
 

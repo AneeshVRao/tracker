@@ -12,6 +12,7 @@ export const COUNTRY_TZ: Record<string, string> = {
   taiwan: 'Asia/Taipei', 'new zealand': 'Pacific/Auckland', portugal: 'Europe/Lisbon', poland: 'Europe/Warsaw',
   'czech republic': 'Europe/Prague', greece: 'Europe/Athens', brazil: 'America/Sao_Paulo', mexico: 'America/Mexico_City',
   'saudi arabia': 'Asia/Riyadh', qatar: 'Asia/Qatar', malaysia: 'Asia/Kuala_Lumpur',
+  thailand: 'Asia/Bangkok', vietnam: 'Asia/Ho_Chi_Minh', indonesia: 'Asia/Jakarta',
 };
 
 export function tzFor(country: string | null, override: string | null): string | null {

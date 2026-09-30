@@ -30,7 +30,12 @@ export function statsBy(db: DB, dim: string): StatRow[] {
     if (dim === 'priority') return PRIORITY[r.priority] ?? String(r.priority);
     if (dim === 'degree') return r.degree ?? '(unknown)';
     if (dim === 'country') return r.country ?? '(unknown)';
-    if (dim.startsWith('col:')) return (JSON.parse(r.extra) as Record<string, string>)[dim.slice(4)] || '(blank)';
+    if (dim.startsWith('col:')) {
+      const name = dim.slice(4);
+      const o = JSON.parse(r.extra) as Record<string, unknown>;
+      const v = Object.hasOwn(o, name) ? o[name] : undefined;
+      return typeof v === 'string' && v ? v : '(blank)';
+    }
     return 'All';
   };
   const groups = new Map<string, { row: StatRow; days: number[] }>();
@@ -40,7 +45,7 @@ export function statsBy(db: DB, dim: string): StatRow[] {
     const g = groups.get(k) ?? { row: { key: k, sent: 0, linkedinSent: 0, accepted: 0, replied: 0, medianDays: null }, days: [] };
     g.row.sent++;
     if (r.channel === 'linkedin') { g.row.linkedinSent++; if (r.accepted) g.row.accepted++; }
-    if (r.replied_at) { g.row.replied++; g.days.push(Math.round((Date.parse(r.replied_at) - Date.parse(r.sent_at)) / DAY)); }
+    if (r.replied_at) { g.row.replied++; g.days.push(Math.max(0, Math.round((Date.parse(r.replied_at) - Date.parse(r.sent_at)) / DAY))); }
     groups.set(k, g);
   }
   return [...groups.values()]
