@@ -100,3 +100,11 @@ export async function runImport(fd: FormData): Promise<{ reports: ImportReport[]
     } finally { refresh(); }
   } catch (e) { return { error: message(e) }; }
 }
+
+export async function saveSettingsAction(_prev: unknown, fd: FormData): Promise<{ ok: boolean; message: string }> {
+  try {
+    q.saveSettings(getDb(), Object.fromEntries([...fd.entries()].map(([k, v]) => [k, String(v)])));
+    refresh();
+    return { ok: true, message: 'Saved.' };
+  } catch (e) { return { ok: false, message: message(e) }; }
+}

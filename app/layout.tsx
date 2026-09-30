@@ -18,6 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Link href="/contacts" className="nav">Contacts</Link>
           <Link href="/lists" className="nav">Lists</Link>
           <Link href="/import" className="nav">Import</Link>
+          <Link href="/settings" className="nav">Settings</Link>
         </nav>
         <main className="min-w-0 flex-1">{children}</main>
       </body>

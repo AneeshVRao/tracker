@@ -10,6 +10,37 @@ export function getSettings(db: DB): Settings {
   return { ...structuredClone(DEFAULT_SETTINGS), ...Object.fromEntries(rows.map(r => [r.key, JSON.parse(r.value)])) } as Settings;
 }
 
+const INT_FIELDS: [key: string, label: string, min: number, max: number][] = [
+  ['weekly_invite_cap', 'Weekly LinkedIn invite cap', 1, 500],
+  ['company_daily_max', 'Sends per company per day', 1, 20],
+  ['nudge1', 'First nudge after (days)', 1, 60],
+  ['nudge2', 'Second nudge after (days)', 1, 60],
+  ['linkedin_withdraw_days', 'Withdraw invite after (days)', 1, 90],
+  ['after_accept_followup_days', 'Message after accept within (days)', 1, 60],
+  ['checkin_days', 'Check-in interval (days)', 1, 60],
+];
+
+export function saveSettings(db: DB, input: Record<string, string>) {
+  const n: Record<string, number> = {};
+  for (const [k, label, min, max] of INT_FIELDS) {
+    const v = (input[k] ?? '').trim();
+    if (!/^\d+$/.test(v) || +v < min || +v > max) throw new Error(`${label} must be a whole number from ${min} to ${max}`);
+    n[k] = +v;
+  }
+  const tz = (input.my_timezone ?? '').trim();
+  if (!tz) throw new Error('Time zone is required');
+  try { new Intl.DateTimeFormat('en', { timeZone: tz }); } catch { throw new Error(`Unknown time zone "${tz}"`); }
+  const projects = (input.projects ?? '').split(',').map(p => p.trim()).filter(Boolean);
+  if (!projects.length || projects.length > 20) throw new Error('List 1–20 project names, comma-separated');
+  const values: Record<string, unknown> = {
+    weekly_invite_cap: n.weekly_invite_cap, company_daily_max: n.company_daily_max, email_nudge_days: [n.nudge1, n.nudge2],
+    linkedin_withdraw_days: n.linkedin_withdraw_days, after_accept_followup_days: n.after_accept_followup_days,
+    checkin_days: n.checkin_days, my_timezone: tz, projects,
+  };
+  const up = db.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value');
+  tx(db, () => { for (const [k, v] of Object.entries(values)) up.run(k, JSON.stringify(v)); });
+}
+
 // ---- reads -----------------------------------------------------------------
 export const PAGE_SIZE = 100;
 export type Filters = { list?: number; status?: string; q?: string; priority?: number; conf?: string; col?: string; val?: string; sort?: string; page?: number };

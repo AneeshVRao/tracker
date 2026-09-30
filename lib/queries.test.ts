@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { openDb, type DB } from './db';
-import { bulkFollowUp, bulkSkip, closeStale, editContact, getContactDetail, getSettings, listContacts, LimitError, listSummaries, performAction, undoLast } from './queries';
+import { bulkFollowUp, bulkSkip, closeStale, editContact, getContactDetail, getSettings, listContacts, LimitError, listSummaries, performAction, saveSettings, undoLast } from './queries';
 
 const now = new Date('2026-09-29T06:00:00Z'); // 11:30 in Asia/Kolkata → today 2026-09-29
 
@@ -169,5 +169,28 @@ describe('limits and daily helpers', () => {
     expect(closeStale(db, now)).toBe(1);
     expect(getContactDetail(db, 1, now)!.contact).toMatchObject({ status: 'closed', outcome: 'no_reply' });
     expect(getContactDetail(db, 2, now)!.contact.status).toBe('sent');
+  });
+});
+
+describe('saveSettings', () => {
+  const valid = {
+    weekly_invite_cap: '80', company_daily_max: '2', nudge1: '5', nudge2: '6', linkedin_withdraw_days: '14',
+    after_accept_followup_days: '4', checkin_days: '9', my_timezone: 'Europe/London', projects: 'ContextCraft, RiskMesh ,',
+  };
+  test('valid input is stored and read back', () => {
+    const db = seed();
+    saveSettings(db, valid);
+    expect(getSettings(db)).toMatchObject({
+      weekly_invite_cap: 80, company_daily_max: 2, email_nudge_days: [5, 6], linkedin_withdraw_days: 14,
+      after_accept_followup_days: 4, checkin_days: 9, my_timezone: 'Europe/London', projects: ['ContextCraft', 'RiskMesh'],
+    });
+  });
+  test.each([
+    ['weekly_invite_cap', '0'], ['weekly_invite_cap', 'abc'], ['nudge2', '61'], ['checkin_days', '1.5'],
+    ['my_timezone', 'Mars/Base'], ['my_timezone', ''], ['projects', ' , '],
+  ])('rejects %s=%s and saves nothing', (k, v) => {
+    const db = seed();
+    expect(() => saveSettings(db, { ...valid, [k]: v })).toThrow();
+    expect(db.prepare('SELECT COUNT(*) AS n FROM settings').get()).toEqual({ n: 0 });
   });
 });
