@@ -29,7 +29,7 @@ export default function TodayPage() {
   const due = dueFollowUps(db, today);
   const replies = repliesWaiting(db);
   const nextUp = lists.map(l => ({ l, ...buildQueue(db, [l.id], now, cfg) }));
-  const pct = stats.invitesWeek / stats.cap;
+  const pct = stats.cap > 0 ? stats.invitesWeek / stats.cap : 0;
   const open = (id: number) => `/contacts?open=${id}`;
 
   return (
@@ -48,6 +48,7 @@ export default function TodayPage() {
             <Row key={d.id} href={open(d.id)} name={d.name} sub={[d.org, d.list_name].filter(Boolean).join(' · ')}>
               <span className={`tabular-nums text-xs ${d.days <= 7 ? 'text-bad' : 'text-warn'}`}>{d.next} · {d.days === 0 ? 'today' : `in ${d.days}d`}</span>
               <StatusChip s={d.status} />
+              <Link href={open(d.id)} className="btn" aria-label={`Compose to ${d.name}`}>Compose</Link>
             </Row>
           ))}
         </Section>
@@ -64,7 +65,7 @@ export default function TodayPage() {
             {rows.map(r => (
               <Row key={r.id} href={open(r.id)} name={r.name} sub={[r.org, r.list_name].filter(Boolean).join(' · ')}>
                 <span className="tabular-nums text-xs text-muted">due {r.follow_up_on}</span>
-                <QuickAction id={r.id} action={d.action} outcome={d.outcome} label={d.label} />
+                <QuickAction name={r.name} id={r.id} action={d.action} outcome={d.outcome} label={d.label} />
               </Row>
             ))}
           </Section>
@@ -75,7 +76,7 @@ export default function TodayPage() {
         <Section title={`Replies waiting for you (${replies.length})`}>
           {replies.map(r => (
             <Row key={r.id} href={open(r.id)} name={r.name} sub={[r.org, r.list_name].filter(Boolean).join(' · ')}>
-              <QuickAction id={r.id} action="conversation" label="In conversation" />
+              <QuickAction name={r.name} id={r.id} action="conversation" label="In conversation" />
             </Row>
           ))}
         </Section>
