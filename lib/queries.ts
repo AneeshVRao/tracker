@@ -1,11 +1,11 @@
 import type { SQLInputValue } from 'node:sqlite';
 import { tx, type Contact, type DB, type EventRow, type List } from './db';
-import { applyAction, DEFAULT_SETTINGS, todayIn, type Action, type EventType, type Outcome, type Settings, type Status } from './rules';
+import { applyAction, DEFAULT_SETTINGS, OPEN_STATUSES, todayIn, type Action, type EventType, type Outcome, type Settings, type Status } from './rules';
 import type { TemplateSet } from './template';
 
 export function getSettings(db: DB): Settings {
   const rows = db.prepare('SELECT key, value FROM settings').all() as { key: string; value: string }[];
-  return { ...DEFAULT_SETTINGS, ...Object.fromEntries(rows.map(r => [r.key, JSON.parse(r.value)])) };
+  return { ...structuredClone(DEFAULT_SETTINGS), ...Object.fromEntries(rows.map(r => [r.key, JSON.parse(r.value)])) } as Settings;
 }
 
 // ---- reads -----------------------------------------------------------------
@@ -146,10 +146,11 @@ export function bulkSkip(db: DB, ids: number[], now = new Date()): number {
 }
 
 export function bulkFollowUp(db: DB, ids: number[], date: string, now = new Date()): number {
-  ids.forEach(id => mustGet(db, id));
+  const cs = ids.map(id => mustGet(db, id));
   if (!ISO_DATE.test(date)) throw new Error('Expected a YYYY-MM-DD date');
-  for (const id of ids) editContact(db, id, 'follow_up_on', date, now);
-  return ids.length;
+  const open = cs.filter(c => OPEN_STATUSES.includes(c.status));
+  for (const c of open) editContact(db, c.id, 'follow_up_on', date, now);
+  return open.length;
 }
 
 export function saveTemplates(db: DB, listId: number, t: TemplateSet) {

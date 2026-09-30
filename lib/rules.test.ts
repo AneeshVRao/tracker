@@ -68,3 +68,16 @@ describe('guards', () => {
   });
   test('reference rows have no actions', () => expect(allowedActions({ ...fresh, status: 'reference' }, 'email')).toEqual([]));
 });
+
+describe('settings', () => {
+  test('conversation and check-in use checkin_days', () => {
+    const replied: State = { ...fresh, status: 'replied' };
+    expect(applyAction(replied, 'email', 'conversation', ctx, { ...cfg, checkin_days: 3 }).patch.follow_up_on).toBe('2026-10-02');
+    const conv: State = { ...fresh, status: 'conversation' };
+    expect(applyAction(conv, 'linkedin', 'checked_in', ctx, { ...cfg, checkin_days: 10 }).patch.follow_up_on).toBe('2026-10-09');
+  });
+  test('defaults are frozen and include checkin_days', () => {
+    expect(Object.isFrozen(cfg)).toBe(true);
+    expect(cfg.checkin_days).toBe(7);
+  });
+});

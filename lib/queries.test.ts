@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { openDb, type DB } from './db';
-import { bulkFollowUp, bulkSkip, editContact, getContactDetail, listContacts, listSummaries, performAction, undoLast } from './queries';
+import { bulkFollowUp, bulkSkip, editContact, getContactDetail, getSettings, listContacts, listSummaries, performAction, undoLast } from './queries';
 
 const now = new Date('2026-09-29T06:00:00Z'); // 11:30 in Asia/Kolkata → today 2026-09-29
 
@@ -60,7 +60,7 @@ describe('actions', () => {
     performAction(db, 1, 'sent', undefined, now);
     expect(bulkSkip(db, [1, 2], now)).toBe(1);
     expect(getContactDetail(db, 2)!.contact.status).toBe('skipped');
-    expect(bulkFollowUp(db, [1, 2], '2026-10-10', now)).toBe(2);
+    expect(bulkFollowUp(db, [1, 2], '2026-10-10', now)).toBe(1);
   });
 
   test('bulk ops validate before writing anything', () => {
@@ -113,5 +113,23 @@ describe('listContacts hardening', () => {
     expect(listContacts(db, { q: '%' }).total).toBe(0);
     expect(listContacts(db, { q: '_' }).total).toBe(0);
     expect(listContacts(db, { col: 'Track', val: '%' }).total).toBe(0);
+  });
+});
+
+describe('settings and bulk follow-up', () => {
+  test('getSettings returns a copy; stored values override defaults', () => {
+    const db = seed();
+    const s = getSettings(db);
+    s.email_nudge_days[0] = 99;
+    expect(getSettings(db).email_nudge_days[0]).toBe(7);
+    db.prepare("INSERT INTO settings (key, value) VALUES ('weekly_invite_cap', '40')").run();
+    expect(getSettings(db).weekly_invite_cap).toBe(40);
+  });
+  test('bulkFollowUp only changes open contacts', () => {
+    const db = seed();
+    performAction(db, 2, 'skip', undefined, now);
+    expect(bulkFollowUp(db, [1, 2], '2026-10-10', now)).toBe(1);
+    expect(getContactDetail(db, 1)!.contact.follow_up_on).toBe('2026-10-10');
+    expect(getContactDetail(db, 2)!.contact.follow_up_on).toBeNull();
   });
 });

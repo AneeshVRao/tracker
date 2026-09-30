@@ -5,17 +5,31 @@ export type Action = 'sent' | 'skip' | 'accepted' | 'messaged' | 'nudged' | 'rep
 export type EventType = 'imported' | 'sent' | 'skipped' | 'accepted' | 'messaged' | 'nudged' | 'replied' | 'status' | 'closed' | 'reopened' | 'note' | 'edited' | 'limit_override' | 'intro_requested';
 export type State = { status: Status; outcome: Outcome | null; followup_step: number; follow_up_on: string | null; sent_at: string | null };
 
-export const DEFAULT_SETTINGS = {
+export type Settings = {
+  weekly_invite_cap: number;
+  company_daily_max: number;
+  email_nudge_days: [number, number]; // after send; after each nudge
+  linkedin_withdraw_days: number;
+  after_accept_followup_days: number;
+  checkin_days: number;
+  projects: string[];
+  my_timezone: string;
+  send_window: { days: number[]; from: number; to: number };
+};
+
+export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze<Settings>({
   weekly_invite_cap: 100,
   company_daily_max: 1,
-  email_nudge_days: [7, 7] as [number, number], // after send; after each nudge
+  email_nudge_days: [7, 7],
   linkedin_withdraw_days: 21,
   after_accept_followup_days: 7,
+  checkin_days: 7,
   projects: ['ContextCraft', 'Uktam', 'RiskMesh', 'ShabdSetu'],
   my_timezone: 'Asia/Kolkata',
   send_window: { days: [2, 3, 4], from: 9, to: 11 },
-};
-export type Settings = typeof DEFAULT_SETTINGS;
+});
+
+export const OPEN_STATUSES: Status[] = ['to_contact', 'sent', 'accepted', 'replied', 'conversation'];
 
 export const STATUS_LABEL: Record<Status, string> = {
   to_contact: 'To contact', sent: 'Sent', accepted: 'Accepted', replied: 'Replied',
@@ -88,9 +102,9 @@ export function applyAction(
     case 'replied':
       return { event: 'replied', patch: { status: 'replied', follow_up_on: null } };
     case 'conversation':
-      return { event: 'status', patch: { status: 'conversation', follow_up_on: plus(7) } };
+      return { event: 'status', patch: { status: 'conversation', follow_up_on: plus(cfg.checkin_days) } };
     case 'checked_in':
-      return { event: 'messaged', patch: { follow_up_on: plus(7) } };
+      return { event: 'messaged', patch: { follow_up_on: plus(cfg.checkin_days) } };
     case 'close':
       if (!ctx.outcome || !outcomesFor(s, ch).includes(ctx.outcome)) throw new Error('A valid outcome is required to close');
       return { event: 'closed', patch: { status: 'closed', outcome: ctx.outcome, follow_up_on: null } };
