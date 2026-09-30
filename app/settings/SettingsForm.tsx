@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import { saveSettingsAction } from '@/app/actions';
 import type { Settings } from '@/lib/rules';
 
@@ -18,12 +18,16 @@ const ROWS = (s: Settings): [name: string, label: string, value: string | number
 
 export function SettingsForm({ s }: { s: Settings }) {
   const [state, action, pending] = useActionState(saveSettingsAction, null);
+  // React resets the form after an action; remount on each result so failed input survives via state.values.
+  const [seen, setSeen] = useState(state);
+  const [gen, setGen] = useState(0);
+  if (state !== seen) { setSeen(state); setGen(gen + 1); }
   return (
-    <form action={action} className="card divide-y divide-line">
+    <form key={gen} action={action} className="card divide-y divide-line">
       {ROWS(s).map(([name, label, value, hint]) => (
         <label key={name} className="grid gap-1 px-4 py-3 sm:grid-cols-[15rem_12rem_1fr] sm:items-center sm:gap-3">
           <span className="font-medium">{label}</span>
-          <input name={name} defaultValue={String(value)} className="input" />
+          <input name={name} defaultValue={state?.values?.[name] ?? String(value)} className="input" />
           <span className="text-xs text-muted">{hint}</span>
         </label>
       ))}
