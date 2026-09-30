@@ -688,7 +688,7 @@ describe('composeFor', () => {
   test('email first message', () =>
     expect(composeFor(base, email)).toEqual({ key: 'body', subject: 'Hi IIT Bombay', body: 'Dear Doe: Angle', canSaveMessage: false }));
   test('email second nudge uses Re: subject', () =>
-    expect(composeFor({ ...base, status: 'sent', followup_step: 2 }, email)).toEqual({ key: 'followup2', subject: 'Re: Hi IIT Bombay', body: 'Last Jyothi', canSaveMessage: false }));
+    expect(composeFor({ ...base, status: 'sent', followup_step: 2 }, email)).toEqual({ key: 'followup2', subject: 'Re: Hi IIT Bombay', body: 'Last Doe', canSaveMessage: false }));
   test('linkedin note is saveable; after-accept is not', () => {
     expect(composeFor(base, linkedin)).toEqual({ key: 'body', subject: '', body: 'Angle', canSaveMessage: true });
     expect(composeFor({ ...base, status: 'accepted', followup_step: 1 }, linkedin)!.key).toBe('after_accept');

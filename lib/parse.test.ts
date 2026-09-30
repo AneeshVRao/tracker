@@ -71,7 +71,7 @@ describe('keys and projects', () => {
   test('personKey prefers linkedin, then email, then name|org', () => {
     expect(personKey({ linkedin_url: 'L', email: 'E', name: 'N', org: 'O' })).toBe('L');
     expect(personKey({ linkedin_url: null, email: 'E', name: 'N', org: 'O' })).toBe('E');
-    expect(personKey({ linkedin_url: null, email: null, name: ' Jane  Doe ', org: 'IIIT Hyderabad' })).toBe('anil kumar|iiit hyderabad');
+    expect(personKey({ linkedin_url: null, email: null, name: ' Jane  Doe ', org: 'Example University' })).toBe('jane doe|example university');
   });
   test('nameOrgKey tolerates null org', () => expect(nameOrgKey('A', null)).toBe('a|'));
 });
