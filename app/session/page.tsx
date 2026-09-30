@@ -54,8 +54,8 @@ export default async function SessionPage({ searchParams }: { searchParams: Prom
   const stats = activityStats(db, now, cfg);
   return (
     <Session
-      key={ids.join(',')}
-      items={batch} total={items.length} deferred={deferred}
+      key={`${ids.join(',')}-${one(sp.b)}`}
+      ids={ids} n={n} initialItems={batch} total={items.length} deferred={deferred}
       orgsToday={Object.fromEntries(orgsSentToday(db, now, cfg))} companyMax={cfg.company_daily_max}
       invites={{ used: stats.invitesWeek, cap: stats.cap }}
     />

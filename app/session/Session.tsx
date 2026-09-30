@@ -14,13 +14,15 @@ export type SessionItem = {
   subject: string; body: string; canSaveMessage: boolean;
 };
 type Props = {
-  items: SessionItem[]; total: number; deferred: number;
+  ids: number[]; n: number; initialItems: SessionItem[]; total: number; deferred: number;
   orgsToday: Record<string, number>; companyMax: number; invites: { used: number; cap: number };
 };
 type Done = Record<number, 'sent' | 'skipped'>;
 
-export function Session({ items, total, deferred, orgsToday, companyMax, invites }: Props) {
+export function Session({ ids, n, initialItems, total, deferred, orgsToday, companyMax, invites }: Props) {
   const router = useRouter();
+  const [items] = useState(initialItems); // frozen: server revalidation must not shift the batch
+  const busy = useRef(false);
   const [i, setI] = useState(0);
   const [done, setDone] = useState<Done>({});
   const [orgCount, setOrgCount] = useState<Record<string, number>>(orgsToday);
@@ -39,8 +41,10 @@ export function Session({ items, total, deferred, orgsToday, companyMax, invites
   };
 
   const act = (kind: 'sent' | 'skip', override = false) => {
-    if (!item || done[item.id]) return;
+    if (!item || done[item.id] || busy.current) return;
+    busy.current = true;
     start(async () => {
+      try {
       setMsg('');
       const r = await actContact(item.id, kind, undefined, override);
       if (!r.ok) {
@@ -55,24 +59,32 @@ export function Session({ items, total, deferred, orgsToday, companyMax, invites
         if (item.channel === 'linkedin') setUsed(u => u + 1);
       }
       setDone(d); setOrgCount(oc); setHistory(h => [...h, item.id]); setI(nextIndex(i, d, oc));
+      } finally { busy.current = false; }
     });
   };
 
   const undo = () => {
     const last = history[history.length - 1];
     if (last === undefined) { setMsg('Nothing to undo in this session.'); return; }
+    if (busy.current) return;
+    busy.current = true;
     start(async () => {
-      if (!(await undoContact(last))) { setMsg('Nothing to undo.'); return; }
+      try {
+      if (!(await undoContact(last, ['sent', 'skipped']))) {
+        setHistory(h => h.slice(0, -1)); setMsg("Can't undo — that contact changed since."); return;
+      }
       const it = items.find(x => x.id === last)!;
       if (done[last] === 'sent') {
         if (it.org) setOrgCount(oc => ({ ...oc, [norm(it.org!)]: Math.max(0, (oc[norm(it.org!)] ?? 1) - 1) }));
         if (it.channel === 'linkedin') setUsed(u => Math.max(0, u - 1));
       }
       const d = { ...done }; delete d[last];
-      setDone(d); setHistory(h => h.slice(0, -1)); setI(items.findIndex(x => x.id === last)); setLimitHit(false);
+      setDone(d); setHistory(h => h.slice(0, -1)); setI(items.findIndex(x => x.id === last)); setLimitHit(false); setMsg('');
+      } finally { busy.current = false; }
     });
   };
 
+  const move = (d: number) => { setI(x => Math.min(Math.max(x + d, 0), items.length)); setLimitHit(false); setMsg(''); };
   const click = (cmd: string) => (document.querySelector(`[data-cmd="${cmd}"]`) as HTMLElement | null)?.click();
 
   useEffect(() => {
@@ -80,6 +92,7 @@ export function Session({ items, total, deferred, orgsToday, companyMax, invites
       const t = e.target as HTMLElement;
       const typing = t.tagName === 'TEXTAREA' || t.tagName === 'INPUT' || t.isContentEditable;
       if (e.key === 'Escape') { e.preventDefault(); if (typing) t.blur(); else router.push('/today'); return; }
+      if (e.repeat) return;
       if (typing || e.metaKey || e.ctrlKey || e.altKey || pending) return;
       const k = e.key.toLowerCase();
       if (k === 'c') click('copy');
@@ -88,8 +101,8 @@ export function Session({ items, total, deferred, orgsToday, companyMax, invites
       else if (k === 'k') act('skip');
       else if (k === 'e') (document.querySelector('[data-cmd="edit"]') as HTMLElement | null)?.focus();
       else if (k === 'u') undo();
-      else if (e.key === 'ArrowRight') setI(n => Math.min(n + 1, items.length));
-      else if (e.key === 'ArrowLeft') setI(n => Math.max(n - 1, 0));
+      else if (e.key === 'ArrowRight') move(1);
+      else if (e.key === 'ArrowLeft') move(-1);
       else return;
       e.preventDefault();
     };
@@ -119,10 +132,10 @@ export function Session({ items, total, deferred, orgsToday, companyMax, invites
       {!item ? (
         <div className="card space-y-3 p-6 text-center">
           <h1 className="page-title">Batch done</h1>
-          <p className="text-muted">{sent} sent, {acted - sent} skipped.</p>
+          <p className="text-muted">{items.length ? `${sent} sent, ${acted - sent} skipped.` : 'Nothing to send in these lists right now.'}</p>
           <div className="flex justify-center gap-2">
             <Link href="/today" className="btn">Back to Today</Link>
-            <button className="btn-primary" onClick={() => router.refresh()}>Next batch</button>
+            {items.length > 0 && <button className="btn-primary" onClick={() => router.push(`/session?lists=${ids.join(',')}&n=${n}&b=${Date.now()}`)}>Next batch</button>}
           </div>
         </div>
       ) : (
@@ -156,8 +169,8 @@ export function Session({ items, total, deferred, orgsToday, companyMax, invites
             <button className="btn" disabled={pending || !!done[item.id]} onClick={() => act('skip')}>Skip <kbd className="opacity-70">K</kbd></button>
             <button className="btn" disabled={pending} onClick={undo}>Undo <kbd className="opacity-70">U</kbd></button>
             <span className="ml-auto flex gap-1.5">
-              <button className="btn" aria-label="Previous contact" disabled={i === 0} onClick={() => setI(n => Math.max(0, n - 1))}>←</button>
-              <button className="btn" aria-label="Next contact" onClick={() => setI(n => Math.min(n + 1, items.length))}>→</button>
+              <button className="btn" aria-label="Previous contact" disabled={i === 0} onClick={() => move(-1)}>←</button>
+              <button className="btn" aria-label="Next contact" onClick={() => move(1)}>→</button>
             </span>
           </div>
 

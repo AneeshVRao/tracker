@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { getDb } from '@/lib/db';
 import { importSheet, previewSheets, type ImportReport, type PreviewTab, type TabConfig } from '@/lib/importer';
 import * as q from '@/lib/queries';
-import type { Action, Outcome } from '@/lib/rules';
+import type { Action, EventType, Outcome } from '@/lib/rules';
 import type { TemplateSet } from '@/lib/template';
 import { readWorkbook } from '@/lib/workbook';
 
@@ -24,7 +24,10 @@ export async function actContact(id: number, action: Action, outcome?: Outcome, 
 }
 
 export async function closeStaleForm() { q.closeStale(getDb()); refresh(); }
-export async function undoContact(id: number) { const ok = q.undoLast(getDb(), id); refresh(); return ok; }
+export async function undoContact(id: number, only?: EventType[]) {
+  if (only !== undefined && !(Array.isArray(only) && only.every(t => t === 'sent' || t === 'skipped'))) throw new Error('Invalid undo filter');
+  const ok = q.undoLast(getDb(), id, only); refresh(); return ok;
+}
 export async function editContact(id: number, field: q.EditableField, value: string | null) { q.editContact(getDb(), id, field, value); refresh(); }
 export async function saveNotes(id: number, text: string) { q.setNotes(getDb(), id, text); }
 

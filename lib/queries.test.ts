@@ -44,6 +44,18 @@ describe('actions', () => {
     expect(undoLast(db, 1)).toBe(false);
   });
 
+  test('undoLast with an allow-list refuses to revert other event types', () => {
+    const db = seed();
+    performAction(db, 1, 'sent', undefined, now);
+    editContact(db, 1, 'message', 'hello', now);
+    expect(undoLast(db, 1, ['sent', 'skipped'])).toBe(false);
+    expect(getContactDetail(db, 1)!.contact.status).toBe('sent');
+    expect(undoLast(db, 1)).toBe(true); // plain undo reverts the edit
+    expect(getContactDetail(db, 1)!.contact.status).toBe('sent');
+    expect(undoLast(db, 1, ['sent', 'skipped'])).toBe(true);
+    expect(getContactDetail(db, 1)!.contact.status).toBe('to_contact');
+  });
+
   test('editContact validates dates and is undoable', () => {
     const db = seed();
     expect(() => editContact(db, 1, 'follow_up_on', 'next week', now)).toThrow(/date/);

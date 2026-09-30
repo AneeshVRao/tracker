@@ -168,13 +168,13 @@ export function closeStale(db: DB, now = new Date()): number {
 }
 
 const undoTarget = (db: DB, id: number) =>
-  db.prepare("SELECT id, data FROM events WHERE contact_id = ? AND reverted = 0 AND type <> 'imported' AND json_extract(data, '$.prev') IS NOT NULL ORDER BY id DESC LIMIT 1")
-    .get(id) as { id: number; data: string } | undefined;
+  db.prepare("SELECT id, type, data FROM events WHERE contact_id = ? AND reverted = 0 AND type <> 'imported' AND json_extract(data, '$.prev') IS NOT NULL ORDER BY id DESC LIMIT 1")
+    .get(id) as { id: number; type: EventType; data: string } | undefined;
 
-export function undoLast(db: DB, id: number): boolean {
+export function undoLast(db: DB, id: number, only?: EventType[]): boolean {
   return tx(db, () => {
     const e = undoTarget(db, id);
-    if (!e) return false;
+    if (!e || (only && !only.includes(e.type))) return false;
     const prev = JSON.parse(e.data).prev as Record<string, SQLInputValue>;
     const keys = Object.keys(prev);
     if (!keys.every(k => PATCHABLE.has(k))) throw new Error('Corrupt undo data');
