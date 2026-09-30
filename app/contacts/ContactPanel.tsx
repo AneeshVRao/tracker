@@ -1,22 +1,41 @@
 import Link from 'next/link';
 import { StatusChip } from '@/app/ui';
 import type { ContactDetail } from '@/lib/queries';
-import { allowedActions, outcomesFor, OUTCOME_LABEL, STATUS_LABEL } from '@/lib/rules';
+import { formatIn, inWindow, nextSlot, tzFor } from '@/lib/besttime';
+import { allowedActions, nextDeadline, outcomesFor, OUTCOME_LABEL, STATUS_LABEL, todayIn, type Settings } from '@/lib/rules';
 import { composeFor } from '@/lib/template';
 import { Composer } from './Composer';
 import { ContactActions } from './ContactActions';
+import { DeadlineEditor } from './DeadlineEditor';
 import { FollowUp, Notes } from './Fields';
+import { TzOverride } from './TzOverride';
 
 const EVENT_LABEL: Record<string, string> = {
   imported: 'Imported', sent: 'Sent', skipped: 'Skipped', accepted: 'Accepted', messaged: 'Messaged', nudged: 'Nudged',
   replied: 'Replied', status: 'Status changed', closed: 'Closed', reopened: 'Reopened', edited: 'Edited', note: 'Note',
 };
 
-export function ContactPanel({ d, closeHref }: { d: ContactDetail; closeHref: string }) {
+// An invalid stored tz makes the Intl helpers throw; treat that as an unknown zone rather than crash the panel.
+function bestTime(country: string | null, override: string | null, now: Date, w: Settings['send_window']) {
+  try {
+    const tz = tzFor(country, override);
+    if (!tz) return null;
+    const good = inWindow(now, tz, w);
+    return { tz, good, slot: good ? null : nextSlot(now, tz, w), here: formatIn(now, tz) };
+  } catch { return null; }
+}
+
+export function ContactPanel({ d, closeHref, settings, now }: { d: ContactDetail; closeHref: string; settings: Settings; now: Date }) {
   const { contact: c, list, events, alsoIn, canUndo } = d;
   const extra = JSON.parse(c.extra) as Record<string, string>;
   const channel = list.channel;
   const composed = composeFor(c, list);
+  const today = todayIn(settings.my_timezone, now);
+  const dates = JSON.parse(c.deadline_dates) as string[];
+  const next = nextDeadline(dates, c.deadline_manual, today);
+  const days = next ? Math.round((Date.parse(next) - Date.parse(today)) / 86400000) : 0;
+  const bt = channel === 'email' ? bestTime(c.country, c.tz, now, settings.send_window) : null;
+  const contacted = alsoIn.filter(a => !['to_contact', 'skipped', 'reference'].includes(a.status));
 
   return (
     <div className="space-y-5 p-5 text-[13px]">
@@ -36,6 +55,10 @@ export function ContactPanel({ d, closeHref }: { d: ContactDetail; closeHref: st
         </div>
       </header>
 
+      {contacted.length > 0 && (
+        <p role="alert" className="rounded-md border border-warn/40 bg-warn/10 px-2 py-1.5 text-xs text-warn">Already contacted via {contacted.map(a => `${a.list} (${STATUS_LABEL[a.status]})`).join(', ')}. Don&apos;t message the same person twice.</p>
+      )}
+
       {channel && (
         <ContactActions key={c.id} id={c.id} actions={allowedActions(c, channel)} outcomes={outcomesFor(c, channel)} canUndo={canUndo} invites={d.invites} org={c.org} orgSentToday={d.orgSentToday} companyMax={d.companyMax} />
       )}
@@ -53,6 +76,26 @@ export function ContactPanel({ d, closeHref }: { d: ContactDetail; closeHref: st
         <span className="label">Follow up on</span>
         <FollowUp key={`f${c.id}-${c.follow_up_on ?? ''}`} id={c.id} value={c.follow_up_on} />
       </div>
+      <section className="space-y-2 border-t border-line pt-4">
+        <h3 className="label">Deadline</h3>
+        {next ? <p className="text-xs">Next: <span className="font-medium">{next}</span> · in {days}d</p> : <p className="text-xs text-muted">No upcoming deadline.</p>}
+        {c.deadline_text && <p className="text-xs text-muted">Sheet: {c.deadline_text}</p>}
+        <DeadlineEditor key={`d${c.id}-${c.deadline_manual ?? ''}`} id={c.id} dates={dates} manual={c.deadline_manual} today={today} />
+        {channel === 'email' && (
+          <>
+            <h3 className="label pt-2">Best time to send</h3>
+            {bt ? (
+              <>
+                <p className="text-xs">Their time: {bt.here} ({bt.tz})</p>
+                {bt.good
+                  ? <p className="text-xs text-good">Good time to send now.</p>
+                  : <p className="text-xs">Next good slot: {formatIn(bt.slot!, bt.tz)} their time = {formatIn(bt.slot!, settings.my_timezone)} yours. Use Gmail&apos;s Schedule send.</p>}
+              </>
+            ) : <p className="text-xs text-muted">Unknown time zone{c.country ? ` for "${c.country}"` : ''}.</p>}
+            <div className="text-xs">Override: <TzOverride key={`t${c.id}-${c.tz ?? ''}`} id={c.id} value={c.tz} /></div>
+          </>
+        )}
+      </section>
       <Notes key={`n${c.id}`} id={c.id} value={c.my_notes} />
 
       <details>

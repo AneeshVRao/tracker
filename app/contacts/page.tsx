@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { bulkForm } from '@/app/actions';
 import { Empty, StatusChip } from '@/app/ui';
 import { getDb } from '@/lib/db';
-import { getContactDetail, listContacts, listHeaders, listSummaries, PAGE_SIZE, type Filters } from '@/lib/queries';
+import { getContactDetail, getSettings, listContacts, listHeaders, listSummaries, PAGE_SIZE, type Filters } from '@/lib/queries';
 import { STATUS_LABEL, type Status } from '@/lib/rules';
 import { ContactPanel } from './ContactPanel';
 
@@ -12,12 +12,13 @@ const num = (v?: string) => (v && /^\d+$/.test(v) ? Number(v) : undefined);
 export default async function ContactsPage({ searchParams }: { searchParams: Promise<SP> }) {
   const raw = await searchParams;
   const sp = Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, (Array.isArray(v) ? v[0] : v) || undefined])) as Record<string, string | undefined>;
-  const f: Filters = { list: num(sp.list), status: sp.status, q: sp.q, priority: num(sp.priority), conf: sp.conf, col: sp.col, val: sp.val, sort: sp.sort, page: num(sp.page) ?? 1 };
+  const f: Filters = { list: num(sp.list), status: sp.status, q: sp.q, priority: num(sp.priority), conf: sp.conf, col: sp.col, val: sp.val, sort: sp.sort, within: num(sp.within), page: num(sp.page) ?? 1 };
   const db = getDb();
+  const now = new Date();
   const lists = listSummaries(db).filter(l => l.kind === 'contacts');
   if (!lists.length) return <Empty>No contacts yet. <Link href="/import" className="text-accent underline">Import a workbook</Link> to start.</Empty>;
 
-  const { rows, total } = listContacts(db, f);
+  const { rows, total } = listContacts(db, f, now);
   const listName = new Map(lists.map(l => [l.id, l.name]));
   const headers = listHeaders(db, f.list);
   const openId = num(sp.open);
@@ -33,17 +34,18 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
     <div className="flex min-h-screen flex-col xl:h-screen xl:flex-row">
       <section className="flex min-w-0 flex-1 flex-col xl:min-h-0">
         <form action="/contacts" className="flex flex-wrap items-center gap-1.5 border-b border-line bg-panel px-3 py-2.5">
-          <input name="q" defaultValue={sp.q} placeholder="Search name, org, role, message" className="input w-64" />
-          <select name="list" defaultValue={sp.list ?? ''} className="input"><option value="">All lists</option>{lists.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}</select>
-          <select name="status" defaultValue={sp.status ?? ''} className="input">
+          <input name="q" aria-label="Search" defaultValue={sp.q} placeholder="Search name, org, role, message" className="input w-64" />
+          <select name="list" aria-label="List" defaultValue={sp.list ?? ''} className="input"><option value="">All lists</option>{lists.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}</select>
+          <select name="status" aria-label="Status" defaultValue={sp.status ?? ''} className="input">
             <option value="">Any status</option><option value="open">Open</option>
             {(Object.keys(STATUS_LABEL) as Status[]).filter(s => s !== 'reference').map(s => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
           </select>
-          <select name="priority" defaultValue={sp.priority ?? ''} className="input"><option value="">Any priority</option><option value="3">High</option><option value="2">Medium</option><option value="1">Low</option></select>
-          <select name="conf" defaultValue={sp.conf ?? ''} className="input"><option value="">Any email</option><option value="verified">Verified email</option><option value="inferred">Inferred email</option><option value="unknown">Unlabelled email</option><option value="none">No email</option></select>
-          <select name="col" defaultValue={sp.col ?? ''} className="input max-w-44"><option value="">Column…</option>{headers.map(h => <option key={h} value={h}>{h}</option>)}</select>
-          <input name="val" defaultValue={sp.val} placeholder="contains" className="input w-28" />
-          <select name="sort" defaultValue={sp.sort ?? ''} className="input"><option value="">Sheet order</option><option value="priority">Priority</option><option value="name">Name</option><option value="follow">Follow-up date</option><option value="touched">Last touched</option></select>
+          <select name="priority" aria-label="Priority" defaultValue={sp.priority ?? ''} className="input"><option value="">Any priority</option><option value="3">High</option><option value="2">Medium</option><option value="1">Low</option></select>
+          <select name="conf" aria-label="Email confidence" defaultValue={sp.conf ?? ''} className="input"><option value="">Any email</option><option value="verified">Verified email</option><option value="inferred">Inferred email</option><option value="unknown">Unlabelled email</option><option value="none">No email</option></select>
+          <select name="within" defaultValue={sp.within ?? ''} className="input" aria-label="Deadline within"><option value="">Any deadline</option><option value="7">Deadline ≤ 7 days</option><option value="21">Deadline ≤ 21 days</option><option value="60">Deadline ≤ 60 days</option></select>
+          <select name="col" aria-label="Column" defaultValue={sp.col ?? ''} className="input max-w-44"><option value="">Column…</option>{headers.map(h => <option key={h} value={h}>{h}</option>)}</select>
+          <input name="val" aria-label="Column contains" defaultValue={sp.val} placeholder="contains" className="input w-28" />
+          <select name="sort" aria-label="Sort" defaultValue={sp.sort ?? ''} className="input"><option value="">Sheet order</option><option value="priority">Priority</option><option value="name">Name</option><option value="follow">Follow-up date</option><option value="touched">Last touched</option></select>
           <button className="btn">Apply</button>
           <Link href="/contacts" className="rounded px-1.5 py-1 text-muted hover:text-fg">Reset</Link>
           <span className="ml-auto text-xs tabular-nums text-muted">{total} contacts</span>
@@ -93,7 +95,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
 
       {detail && (
         <aside className="order-first w-full shrink-0 border-b border-line bg-panel xl:order-none xl:w-[520px] xl:overflow-y-auto xl:border-b-0 xl:border-l">
-          <ContactPanel d={detail} closeHref={href({ open: undefined })} />
+          <ContactPanel d={detail} closeHref={href({ open: undefined })} settings={getSettings(db)} now={now} />
         </aside>
       )}
     </div>
