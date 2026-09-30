@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Empty } from '@/app/ui';
 import { getDb } from '@/lib/db';
+import { formatIn, inWindow, nextSlot, tzFor } from '@/lib/besttime';
 import { getList, getSettings, listSummaries } from '@/lib/queries';
 import { composeFor } from '@/lib/template';
 import { activityStats, buildQueue, orgsSentToday } from '@/lib/today';
@@ -44,11 +45,19 @@ export default async function SessionPage({ searchParams }: { searchParams: Prom
   const listById = new Map(ids.map(id => [id, getList(db, id)!]));
   const batch: SessionItem[] = items.slice(0, n).map(c => {
     const composed = composeFor(c, listById.get(c.list_id)!)!;
+    const tz = c.channel === 'email' ? tzFor(c.country, c.tz) : null;
+    let best: SessionItem['best'] = null;
+    if (tz) {
+      try {
+        const good = inWindow(now, tz, cfg.send_window);
+        best = { tz, theirs: formatIn(now, tz), good, slotTheirs: good ? null : formatIn(nextSlot(now, tz, cfg.send_window), tz), slotMine: good ? null : formatIn(nextSlot(now, tz, cfg.send_window), cfg.my_timezone) };
+      } catch { best = null; }
+    }
     return {
       id: c.id, name: c.name, role: c.role, org: c.org, list_name: c.list_name, channel: c.channel,
       email: c.email, email_confidence: c.email_confidence, linkedin_url: c.linkedin_url,
       next_deadline: c.next_deadline, mutual: c.mutual, priority: c.priority,
-      subject: composed.subject, body: composed.body, canSaveMessage: composed.canSaveMessage,
+      subject: composed.subject, body: composed.body, canSaveMessage: composed.canSaveMessage, best, dup_list: c.dup_list,
     };
   });
   const stats = activityStats(db, now, cfg);

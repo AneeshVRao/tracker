@@ -12,6 +12,7 @@ export type SessionItem = {
   email: string | null; email_confidence: EmailConfidence | null; linkedin_url: string | null;
   next_deadline: string | null; mutual: string | null; priority: number;
   subject: string; body: string; canSaveMessage: boolean;
+  best: { tz: string; theirs: string; good: boolean; slotTheirs: string | null; slotMine: string | null } | null; dup_list: string | null;
 };
 type Props = {
   ids: number[]; n: number; initialItems: SessionItem[]; total: number; deferred: number;
@@ -152,6 +153,10 @@ export function Session({ ids, n, initialItems, total, deferred, orgsToday, comp
               {item.next_deadline && <span className="text-warn">Deadline {item.next_deadline}</span>}
               {item.mutual && <span>Mutual: {item.mutual}</span>}
             </p>
+            {item.dup_list && <p role="alert" className="text-xs text-warn">Already contacted via {item.dup_list}. Don&apos;t message the same person twice — skip (K).</p>}
+            {item.best && (item.best.good
+              ? <p className="text-xs text-good">Good time to send: it&apos;s {item.best.theirs} for them.</p>
+              : <p className="text-xs text-muted">Their time {item.best.theirs}. Best slot {item.best.slotTheirs} theirs ({item.best.slotMine} yours). Use Gmail Schedule send.</p>)}
           </header>
 
           {orgFull(item, orgCount) && !done[item.id] && (
