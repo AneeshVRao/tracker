@@ -28,7 +28,7 @@ Spec: [specs/2026-09-29-outreach-tracker-design.md](specs/2026-09-29-outreach-tr
 - Server actions other than import throw instead of returning `{ error }`; undo shows no message when there's nothing to undo.
 - Below 1280px the contact panel stacks above the table (tab order ≠ visual order); `next/font` fetches Geist at build time.
 
-## M2 Daily driver — plan to be written after M1 ships
+## M2 Daily driver — [plan](plans/2026-09-30-m2-daily-driver.md)
 
 - [ ] Today page (F2): deadlines, follow-ups due, replies waiting, next batch
 - [ ] Session mode (F5): keyboard queue `C O S K E U ← → Esc`
