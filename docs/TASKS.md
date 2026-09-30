@@ -34,7 +34,7 @@ Spec: [specs/2026-09-29-outreach-tracker-design.md](specs/2026-09-29-outreach-tr
 - [x] LinkedIn safety (F7): weekly cap, company spacing, withdraw list
 - [x] Settings page for §15 defaults
 
-## M3 Intelligence — plan to be written after M2 ships
+## M3 Intelligence — [plan](plans/2026-09-30-m3-intelligence.md)
 
 - [ ] Deadline radar (F9) incl. Formal Programmes reference list, manual deadline edit
 - [ ] Best time to send (F10), per-contact timezone override
