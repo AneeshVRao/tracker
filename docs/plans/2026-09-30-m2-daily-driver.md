@@ -1179,8 +1179,6 @@ export default async function SessionPage({ searchParams }: { searchParams: Prom
 }
 ```
 
-`name="lists"` checkboxes submit as `lists=1&lists=3`. Because `searchParams.lists` is then an array, handle both forms: build `ids` from `[sp.lists].flat().join(',')` instead of `one(sp.lists)`. Use:
-`const ids = [sp.lists].flat().filter(Boolean).join(',').split(',').map(Number).filter(id => lists.some(l => l.id === id));`
 
 - [ ] **Step 2: Client session** in `app/session/Session.tsx`
 
