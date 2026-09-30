@@ -87,7 +87,7 @@ export default function TodayPage() {
           <div key={l.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3">
             <span className="w-48 font-medium">{l.name}</span>
             <span className="text-xs text-muted">{items.length} ready{deferred ? ` · ${deferred} waiting (company spacing)` : ''}</span>
-            <span className="min-w-0 flex-1 truncate text-xs text-muted">{items.slice(0, 5).map(i => i.name).join(', ')}</span>
+            <span className="min-w-0 flex-1 truncate text-xs text-muted">{items.slice(0, 10).map(i => i.name).join(', ')}</span>
             {items.length > 0 && <Link href={`/session?lists=${l.id}`} className="btn">Session</Link>}
           </div>
         ))}

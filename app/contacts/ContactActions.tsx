@@ -17,13 +17,13 @@ export function ContactActions({ id, actions, outcomes, canUndo, invites, org, o
   const [note, setNote] = useState('');
 
   const act = (action: Action, outcome?: Outcome, override = false) => start(async () => {
-    setError(''); setNote('');
+    setError(''); setLimit(null); setNote('');
     const r = await actContact(id, action, outcome, override);
     if (r.ok) { setClosing(false); setLimit(null); return; }
     if ('limit' in r) setLimit(r.limit); else setError(r.error);
   });
   const undo = () => start(async () => {
-    setError('');
+    setError(''); setLimit(null);
     try { if (!(await undoContact(id))) setNote('Nothing to undo.'); } catch { setError('Undo failed. Reload and try again.'); }
   });
   const nearCap = invites && invites.used >= invites.cap * 0.8;

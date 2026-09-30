@@ -24,6 +24,7 @@ Spec: [specs/2026-09-29-outreach-tracker-design.md](specs/2026-09-29-outreach-tr
 - Deadline parsing: yearless/"may" false positives beyond the documented one; `parseDegree` misses multi-line cells.
 - Session: header's 'more after this batch' count drifts as you send (cosmetic); ←/→-passed contacts aren't revisited automatically.
 - Below 1280px the contact panel stacks above the table (tab order ≠ visual order); `next/font` fetches Geist at build time.
+- `editContact` / `bulkForm` / `closeStaleForm` / `saveNotes` server actions still throw instead of returning `{ error }` (only `actContact` returns a result).
 
 ## M2 Daily driver — [plan](plans/2026-09-30-m2-daily-driver.md)
 

@@ -15,7 +15,7 @@ export type ActResult = { ok: true } | { ok: false; limit: { used: number; cap: 
 
 export async function actContact(id: number, action: Action, outcome?: Outcome, override = false): Promise<ActResult> {
   try {
-    q.performAction(getDb(), id, action, outcome, new Date(), { override });
+    q.performAction(getDb(), id, action, outcome, new Date(), { override: override === true });
     return { ok: true };
   } catch (e) {
     if (e instanceof q.LimitError) return { ok: false, limit: { used: e.used, cap: e.cap } };
