@@ -32,7 +32,18 @@ export function saveSettings(db: DB, input: Record<string, string>) {
   try { new Intl.DateTimeFormat('en', { timeZone: tz }); } catch { throw new Error(`Unknown time zone "${tz}"`); }
   const projects = (input.projects ?? '').split(',').map(p => p.trim()).filter(Boolean);
   if (!projects.length || projects.length > 20) throw new Error('List 1–20 project names, comma-separated');
+  const ident = (k: string, label: string) => {
+    const v = (input[k] ?? '').trim();
+    if (v.length > 200) throw new Error(`${label} must be at most 200 characters`);
+    return v;
+  };
+  const days = [...new Set((input.send_days ?? '').split(',').map(d => d.trim()).filter(Boolean).map(Number))].sort();
+  if (!days.length || !days.every(d => Number.isInteger(d) && d >= 0 && d <= 6)) throw new Error('Pick at least one send day');
+  const [from, to] = [input.send_from, input.send_to].map(v => (/^\d+$/.test((v ?? '').trim()) ? +v.trim() : NaN));
+  if (!(from >= 0 && to <= 23 && from < to)) throw new Error('Send window must be hours 0–23, with start before end');
   const values: Record<string, unknown> = {
+    my_name: ident('my_name', 'Your name'), my_first_name: ident('my_first_name', 'Your first name'), my_intro: ident('my_intro', 'Intro line'),
+    send_window: { days, from, to },
     weekly_invite_cap: n.weekly_invite_cap, company_daily_max: n.company_daily_max, email_nudge_days: [n.nudge1, n.nudge2],
     linkedin_withdraw_days: n.linkedin_withdraw_days, after_accept_followup_days: n.after_accept_followup_days,
     checkin_days: n.checkin_days, my_timezone: tz, projects,

@@ -3,16 +3,16 @@ import type { Channel, Status } from './rules';
 
 export type TemplateSet = { subject: string; body: string; followup1: string; followup2: string; after_accept: string };
 export type TemplateKey = keyof TemplateSet;
-export type TemplateContext = { name: string; org: string | null; role: string | null; message: string | null; extra: Record<string, string> };
+export type TemplateContext = { name: string; org: string | null; role: string | null; message: string | null; extra: Record<string, string>; me?: { name: string; first_name: string; intro: string } };
 
-const SIGN_OFF = 'Best regards,\nAneesh Venkatesha Rao\nECE, NIT Warangal';
+const SIGN_OFF = 'Best regards,\n{{my_name}}';
 
 export const DEFAULT_TEMPLATES: Record<Channel, TemplateSet> = {
   email: {
-    subject: 'Prospective research intern from NIT Warangal (ECE)',
+    subject: 'Prospective research intern: {{my_name}}',
     body: `Dear Prof. {{last_name}},
 
-I'm Aneesh Venkatesha Rao, a third-year ECE undergraduate at NIT Warangal. I recently read your work "{{col:Most Relevant Paper(s)}}".
+I'm {{my_name}}, {{my_intro}}. I recently read your work "{{col:Most Relevant Paper(s)}}".
 
 {{message}}
 
@@ -31,7 +31,7 @@ ${SIGN_OFF}`,
 One last follow-up on my internship inquiry. If someone else in your group would be a better person to contact, I'd appreciate a pointer.
 
 Thank you for your time,
-Aneesh`,
+{{my_first_name}}`,
     after_accept: '',
   },
   linkedin: {
@@ -57,7 +57,7 @@ function nameParts(name: string) {
 export function render(tpl: string, c: TemplateContext): { text: string; missing: string[] } {
   const missing: string[] = [];
   const { first, last } = nameParts(c.name);
-  const vars: Record<string, string | null> = { first_name: first, last_name: last, name: c.name, org: c.org, role: c.role, message: c.message };
+  const vars: Record<string, string | null> = { first_name: first, last_name: last, name: c.name, org: c.org, role: c.role, message: c.message, my_name: c.me?.name ?? null, my_first_name: c.me?.first_name ?? null, my_intro: c.me?.intro ?? null };
   const text = tpl.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_, key: string) => {
     const [src, k] = key.startsWith('col:') ? [c.extra, key.slice(4).trim()] : [vars, key];
     const v = Object.hasOwn(src, k) ? src[k] : null;
@@ -89,11 +89,12 @@ export type Composed = { key: TemplateKey; subject: string; body: string; canSav
 export function composeFor(
   c: Pick<Contact, 'name' | 'org' | 'role' | 'message' | 'extra' | 'status' | 'followup_step'>,
   list: Pick<List, 'channel' | 'templates'>,
+  me?: TemplateContext['me'],
 ): Composed | null {
   if (!list.channel) return null;
   const tpl = JSON.parse(list.templates) as Partial<TemplateSet>;
   const key = pickTemplate(c.status, c.followup_step, list.channel);
-  const ctx = { name: c.name, org: c.org, role: c.role, message: c.message, extra: JSON.parse(c.extra) as Record<string, string> };
+  const ctx = { name: c.name, org: c.org, role: c.role, message: c.message, extra: JSON.parse(c.extra) as Record<string, string>, me };
   const subject = list.channel === 'email' ? render(key === 'body' ? tpl.subject ?? '' : `Re: ${tpl.subject ?? ''}`, ctx).text : '';
   return {
     key, subject, body: render(tpl[key] ?? '', ctx).text,

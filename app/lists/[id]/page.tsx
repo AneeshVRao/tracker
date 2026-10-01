@@ -36,7 +36,7 @@ export default async function ListPage({ params }: { params: Promise<{ id: strin
 
       <section className="space-y-2 border-t border-line pt-6">
         <h2 className="font-semibold tracking-tight">Placeholders</h2>
-        <p className="text-muted">{'{{first_name}} {{last_name}} {{name}} {{org}} {{role}} {{message}}'} · any column as {'{{col:Column name}}'}. Text in [[double brackets]] blocks copying until you replace it.</p>
+        <p className="text-muted">{'{{first_name}} {{last_name}} {{name}} {{org}} {{role}} {{message}} {{my_name}} {{my_first_name}} {{my_intro}}'} · any column as {'{{col:Column name}}'}. Text in [[double brackets]] blocks copying until you replace it.</p>
         <div className="flex flex-wrap gap-1.5">{headers.map(h => <code key={h} className="rounded border border-line bg-sunken px-1.5 py-0.5 font-mono text-xs">{`{{col:${h}}}`}</code>)}</div>
       </section>
 

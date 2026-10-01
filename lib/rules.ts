@@ -14,6 +14,9 @@ export type Settings = {
   checkin_days: number;
   projects: string[];
   my_timezone: string;
+  my_name: string;
+  my_first_name: string;
+  my_intro: string;
   send_window: { days: number[]; from: number; to: number };
 };
 
@@ -26,6 +29,9 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze<Settings>({
   checkin_days: 7,
   projects: ['ContextCraft', 'Uktam', 'RiskMesh', 'ShabdSetu'],
   my_timezone: 'Asia/Kolkata',
+  my_name: '',
+  my_first_name: '',
+  my_intro: '',
   send_window: { days: [2, 3, 4], from: 9, to: 11 },
 });
 

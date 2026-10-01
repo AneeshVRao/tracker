@@ -17,7 +17,7 @@ describe('render', () => {
     expect(r.text).toBe('[[missing: constructor]] [[missing: col:toString]]');
   });
   test('default email body renders with edit markers that block copying', () => {
-    const r = render(DEFAULT_TEMPLATES.email.body, ctx);
+    const r = render(DEFAULT_TEMPLATES.email.body, { ...ctx, me: { name: 'Alex Student', first_name: 'Alex', intro: 'a student' } });
     expect(r.missing).toEqual([]);
     expect(hasBlockers(r.text)).toBe(true);
   });
@@ -61,4 +61,18 @@ describe('composeFor', () => {
     expect(composeFor({ ...base, status: 'accepted', followup_step: 1 }, linkedin)!.canSaveMessage).toBe(false);
   });
   test('reference list → null', () => expect(composeFor(base, { channel: null, templates: '{}' })).toBeNull());
+});
+
+test('identity placeholders come from ctx.me; missing ones block copy', () => {
+  const me = { name: 'Alex Student', first_name: 'Alex', intro: 'a third-year ECE undergraduate at Example Institute' };
+  expect(render("I'm {{my_name}}, {{my_intro}}. — {{my_first_name}}", { ...ctx, me }).text)
+    .toBe("I'm Alex Student, a third-year ECE undergraduate at Example Institute. — Alex");
+  const r = render('{{my_name}}', ctx);
+  expect(r.text).toBe('[[missing: my_name]]');
+  expect(hasBlockers(r.text)).toBe(true);
+});
+test('default templates contain no hard-coded identity', () => {
+  const all = JSON.stringify(DEFAULT_TEMPLATES);
+  expect(all).toContain('{{my_name}}');
+  expect(all).not.toMatch(/Aneesh|Warangal|NIT /);
 });

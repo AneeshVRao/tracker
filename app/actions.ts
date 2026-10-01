@@ -105,7 +105,7 @@ export async function runImport(fd: FormData): Promise<{ reports: ImportReport[]
 }
 
 export async function saveSettingsAction(_prev: unknown, fd: FormData): Promise<{ ok: boolean; message: string; values?: Record<string, string> }> {
-  const values = Object.fromEntries([...fd.entries()].map(([k, v]) => [k, String(v)]));
+  const values = { ...Object.fromEntries([...fd.entries()].map(([k, v]) => [k, String(v)])), send_days: fd.getAll('send_days').join(',') };
   try {
     q.saveSettings(getDb(), values);
     refresh();

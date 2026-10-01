@@ -29,7 +29,7 @@ export function ContactPanel({ d, closeHref, settings, now }: { d: ContactDetail
   const { contact: c, list, events, alsoIn, canUndo } = d;
   const extra = JSON.parse(c.extra) as Record<string, string>;
   const channel = list.channel;
-  const composed = composeFor(c, list);
+  const composed = composeFor(c, list, { name: settings.my_name, first_name: settings.my_first_name, intro: settings.my_intro });
   const today = todayIn(settings.my_timezone, now);
   const dates = JSON.parse(c.deadline_dates) as string[];
   const next = nextDeadline(dates, c.deadline_manual, today);

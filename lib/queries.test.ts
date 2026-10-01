@@ -188,6 +188,7 @@ describe('saveSettings', () => {
   const valid = {
     weekly_invite_cap: '80', company_daily_max: '2', nudge1: '5', nudge2: '6', linkedin_withdraw_days: '14',
     after_accept_followup_days: '4', checkin_days: '9', my_timezone: 'Europe/London', projects: 'ContextCraft, RiskMesh ,',
+    my_name: ' Alex Student ', my_first_name: 'Alex', my_intro: 'a student', send_days: '2,3,4', send_from: '9', send_to: '11',
   };
   test('valid input is stored and read back', () => {
     const db = seed();
@@ -197,6 +198,13 @@ describe('saveSettings', () => {
       after_accept_followup_days: 4, checkin_days: 9, my_timezone: 'Europe/London', projects: ['ContextCraft', 'RiskMesh'],
     });
   });
+  test('identity and send window round-trip', () => {
+    const db = seed();
+    saveSettings(db, { ...valid, send_days: '1,5', send_from: '8', send_to: '10' });
+    expect(getSettings(db)).toMatchObject({ my_name: 'Alex Student', my_first_name: 'Alex', my_intro: 'a student', send_window: { days: [1, 5], from: 8, to: 10 } });
+  });
+  test.each([['send_days', ''], ['send_days', '7'], ['send_from', '11'], ['send_to', '24'], ['my_name', 'x'.repeat(201)]])(
+    'rejects %s=%s', (k, v) => { const db = seed(); expect(() => saveSettings(db, { ...valid, [k]: v })).toThrow(); });
   test.each([
     ['weekly_invite_cap', '0'], ['weekly_invite_cap', 'abc'], ['nudge2', '61'], ['checkin_days', '1.5'],
     ['my_timezone', 'Mars/Base'], ['my_timezone', ''], ['projects', ' , '],

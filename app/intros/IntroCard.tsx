@@ -4,15 +4,16 @@ import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { markIntroAsked } from '@/app/actions';
 import { StatusChip } from '@/app/ui';
+import { hasBlockers } from '@/lib/template';
 import type { Status } from '@/lib/rules';
 
 type C = { id: number; name: string; org: string | null; role: string | null; list_name: string; asked_at: string | null; status: Status };
 
-export function IntroCard({ mutual, contacts }: { mutual: string; contacts: C[] }) {
+export function IntroCard({ mutual, contacts, me }: { mutual: string; contacts: C[]; me: { name: string; first_name: string; intro: string } }) {
   const first = mutual.split(/\s+/)[0];
   const who = contacts.map(c => (c.org ? `${c.name} (${c.org})` : c.name)).join(', ');
   const [text, setText] = useState(
-    `Hi ${first}, hope you're doing well! I'm a third-year ECE student at NIT Warangal looking for internship opportunities. I noticed you're connected with ${who}. Would you be open to a quick intro? I'm happy to send a short blurb you can forward.\n\nThanks so much!\nAneesh`,
+    `Hi ${first}, hope you're doing well! I'm ${me.name.trim() || '[[edit: your name]]'}, ${me.intro.trim() || '[[edit: one line about you]]'}. I noticed you're connected with ${who}. Would you be open to a quick intro? I'm happy to send a short blurb you can forward.\n\nThanks so much!\n${me.first_name.trim() || '[[edit: your name]]'}`,
   );
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, start] = useTransition();
@@ -45,7 +46,7 @@ export function IntroCard({ mutual, contacts }: { mutual: string; contacts: C[] 
       </ul>
       <textarea value={text} onChange={e => setText(e.target.value)} rows={5} className="input w-full text-[13px] leading-relaxed" aria-label={`Intro request to ${mutual}`} />
       <div className="flex flex-wrap items-center gap-1.5">
-        <button type="button" className="btn-primary" disabled={pending} onClick={copyAndLog}>Copy &amp; log request</button>
+        <button type="button" className="btn-primary" disabled={pending || hasBlockers(text)} onClick={copyAndLog}>Copy &amp; log request</button>
         {msg && <span role={msg.ok ? 'status' : 'alert'} className={`text-xs ${msg.ok ? 'text-good' : 'text-bad'}`}>{msg.text}</span>}
       </div>
     </section>
