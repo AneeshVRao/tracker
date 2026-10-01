@@ -2,13 +2,14 @@ import { Empty } from '@/app/ui';
 import { getDb } from '@/lib/db';
 import { introGroups } from '@/lib/insights';
 import { getSettings } from '@/lib/queries';
+import { meFrom } from '@/lib/template';
 import { IntroCard } from './IntroCard';
 
 export default function IntrosPage() {
   const db = getDb();
   const groups = introGroups(db);
   const s = getSettings(db);
-  const me = { name: s.my_name, first_name: s.my_first_name, intro: s.my_intro };
+  const me = meFrom(s);
   return (
     <div className="mx-auto max-w-3xl space-y-4 p-6">
       <h1 className="page-title">Warm intros</h1>

@@ -17,6 +17,8 @@ export type Settings = {
   my_name: string;
   my_first_name: string;
   my_intro: string;
+  avail_from: string; // '' or YYYY-MM-DD
+  avail_to: string;
   send_window: { days: number[]; from: number; to: number };
 };
 
@@ -32,6 +34,8 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze<Settings>({
   my_name: '',
   my_first_name: '',
   my_intro: '',
+  avail_from: '',
+  avail_to: '',
   send_window: { days: [2, 3, 4], from: 9, to: 11 },
 });
 

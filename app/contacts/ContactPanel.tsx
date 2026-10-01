@@ -3,7 +3,7 @@ import { StatusChip } from '@/app/ui';
 import type { ContactDetail } from '@/lib/queries';
 import { formatIn, inWindow, nextSlot, tzFor } from '@/lib/besttime';
 import { allowedActions, nextDeadline, outcomesFor, OUTCOME_LABEL, STATUS_LABEL, todayIn, type Settings } from '@/lib/rules';
-import { composeFor } from '@/lib/template';
+import { composeFor, meFrom } from '@/lib/template';
 import { Composer } from './Composer';
 import { ContactActions } from './ContactActions';
 import { DeadlineEditor } from './DeadlineEditor';
@@ -29,7 +29,7 @@ export function ContactPanel({ d, closeHref, settings, now }: { d: ContactDetail
   const { contact: c, list, events, alsoIn, canUndo } = d;
   const extra = JSON.parse(c.extra) as Record<string, string>;
   const channel = list.channel;
-  const composed = composeFor(c, list, { name: settings.my_name, first_name: settings.my_first_name, intro: settings.my_intro });
+  const composed = composeFor(c, list, meFrom(settings));
   const today = todayIn(settings.my_timezone, now);
   const dates = JSON.parse(c.deadline_dates) as string[];
   const next = nextDeadline(dates, c.deadline_manual, today);

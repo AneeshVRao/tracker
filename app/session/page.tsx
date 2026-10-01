@@ -3,7 +3,7 @@ import { Empty } from '@/app/ui';
 import { getDb } from '@/lib/db';
 import { formatIn, inWindow, nextSlot, tzFor } from '@/lib/besttime';
 import { getList, getSettings, listSummaries } from '@/lib/queries';
-import { composeFor } from '@/lib/template';
+import { composeFor, meFrom } from '@/lib/template';
 import { activityStats, buildQueue, orgsSentToday } from '@/lib/today';
 import { Session, type SessionItem } from './Session';
 
@@ -44,7 +44,7 @@ export default async function SessionPage({ searchParams }: { searchParams: Prom
   const { items, deferred } = buildQueue(db, ids, now, cfg);
   const listById = new Map(ids.map(id => [id, getList(db, id)!]));
   const batch: SessionItem[] = items.slice(0, n).map(c => {
-    const composed = composeFor(c, listById.get(c.list_id)!, { name: cfg.my_name, first_name: cfg.my_first_name, intro: cfg.my_intro })!;
+    const composed = composeFor(c, listById.get(c.list_id)!, meFrom(cfg))!;
     const tz = c.channel === 'email' ? tzFor(c.country, c.tz) : null;
     let best: SessionItem['best'] = null;
     if (tz) {

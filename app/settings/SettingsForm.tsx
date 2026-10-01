@@ -54,6 +54,15 @@ export function SettingsForm({ s }: { s: Settings }) {
           </div>
         </div>
       </fieldset>
+      <fieldset className="grid gap-1 px-4 py-3 sm:grid-cols-[15rem_1fr] sm:items-center sm:gap-3">
+        <legend className="sr-only">Availability</legend>
+        <span className="font-medium">Available for internship</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <input name="avail_from" type="date" defaultValue={state?.values?.avail_from ?? s.avail_from} className="input w-40" aria-label="Available from" />
+          to <input name="avail_to" type="date" defaultValue={state?.values?.avail_to ?? s.avail_to} className="input w-40" aria-label="Available until" />
+          <span className="text-xs text-muted">Used in templates as {'{{my_dates}}'}, e.g. Dec 1, 2026 – Jan 15, 2027. Leave both empty to clear.</span>
+        </div>
+      </fieldset>
       <div className="flex items-center gap-3 bg-sunken/40 px-4 py-3">
         <button className="btn-primary" disabled={pending}>{pending ? 'Saving…' : 'Save settings'}</button>
         {state && <p role={state.ok ? 'status' : 'alert'} className={state.ok ? 'notice-good' : 'notice-bad'}>{state.message}</p>}

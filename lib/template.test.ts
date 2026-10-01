@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { DEFAULT_TEMPLATES, composeFor, gmailComposeUrl, hasBlockers, pickTemplate, render } from './template';
+import { DEFAULT_SETTINGS } from './rules';
+import { DEFAULT_TEMPLATES, composeFor, formatRange, gmailComposeUrl, hasBlockers, meFrom, pickTemplate, render } from './template';
 
 const ctx = { name: 'Prof. Jane Doe', org: 'IIT Bombay', role: 'Associate Professor', message: 'Your RECAST idea maps onto my retrieval work.', extra: { 'Most Relevant Paper(s)': 'RECAST', Empty: '' } };
 
@@ -17,7 +18,7 @@ describe('render', () => {
     expect(r.text).toBe('[[missing: constructor]] [[missing: col:toString]]');
   });
   test('default email body renders with edit markers that block copying', () => {
-    const r = render(DEFAULT_TEMPLATES.email.body, { ...ctx, me: { name: 'Alex Student', first_name: 'Alex', intro: 'a student' } });
+    const r = render(DEFAULT_TEMPLATES.email.body, { ...ctx, me: { name: 'Alex Student', first_name: 'Alex', intro: 'a student', dates: 'Dec 1, 2026 – Jan 15, 2027' } });
     expect(r.missing).toEqual([]);
     expect(hasBlockers(r.text)).toBe(true);
   });
@@ -64,7 +65,7 @@ describe('composeFor', () => {
 });
 
 test('identity placeholders come from ctx.me; missing ones block copy', () => {
-  const me = { name: 'Alex Student', first_name: 'Alex', intro: 'a third-year ECE undergraduate at Example Institute' };
+  const me = { name: 'Alex Student', first_name: 'Alex', intro: 'a third-year ECE undergraduate at Example Institute', dates: 'Dec 1, 2026 – Jan 15, 2027' };
   expect(render("I'm {{my_name}}, {{my_intro}}. — {{my_first_name}}", { ...ctx, me }).text)
     .toBe("I'm Alex Student, a third-year ECE undergraduate at Example Institute. — Alex");
   const r = render('{{my_name}}', ctx);
@@ -75,4 +76,21 @@ test('default templates contain no hard-coded identity', () => {
   const all = JSON.stringify(DEFAULT_TEMPLATES);
   expect(all).toContain('{{my_name}}');
   expect(all).not.toMatch(/Aneesh|Warangal|NIT /);
+});
+
+test('formatRange formats an availability window in UTC', () => {
+  expect(formatRange('2026-12-01', '2027-01-15')).toBe('Dec 1, 2026 – Jan 15, 2027');
+  expect(formatRange('', '2027-01-15')).toBe('');
+});
+test('{{my_dates}} renders from me.dates and blocks when blank', () => {
+  const me = { name: 'Alex Student', first_name: 'Alex', intro: 'a student', dates: 'Dec 1, 2026 – Jan 15, 2027' };
+  expect(render('Window: {{my_dates}}', { ...ctx, me }).text).toBe('Window: Dec 1, 2026 – Jan 15, 2027');
+  expect(render('{{my_dates}}', { ...ctx, me: { ...me, dates: '' } }).text).toBe('[[missing: my_dates]]');
+});
+test('default email subject carries the window', () => {
+  expect(DEFAULT_TEMPLATES.email.subject).toContain('{{my_dates}}');
+  expect(DEFAULT_TEMPLATES.email.body).not.toContain('your target window');
+});
+test('meFrom builds me from settings', () => {
+  expect(meFrom({ ...DEFAULT_SETTINGS, my_name: 'Alex Student', avail_from: '2026-12-01', avail_to: '2027-01-15' }).dates).toBe('Dec 1, 2026 – Jan 15, 2027');
 });

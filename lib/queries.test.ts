@@ -188,8 +188,18 @@ describe('saveSettings', () => {
   const valid = {
     weekly_invite_cap: '80', company_daily_max: '2', nudge1: '5', nudge2: '6', linkedin_withdraw_days: '14',
     after_accept_followup_days: '4', checkin_days: '9', my_timezone: 'Europe/London', projects: 'ContextCraft, RiskMesh ,',
-    my_name: ' Alex Student ', my_first_name: 'Alex', my_intro: 'a student', send_days: '2,3,4', send_from: '9', send_to: '11',
+    my_name: ' Alex Student ', my_first_name: 'Alex', my_intro: 'a student', send_days: '2,3,4', send_from: '9', send_to: '11', avail_from: '2026-12-01', avail_to: '2027-01-15',
   };
+  test('availability round-trips and may be cleared', () => {
+    const db = seed();
+    saveSettings(db, valid);
+    expect(getSettings(db)).toMatchObject({ avail_from: '2026-12-01', avail_to: '2027-01-15' });
+    saveSettings(db, { ...valid, avail_from: '', avail_to: '' });
+    expect(getSettings(db)).toMatchObject({ avail_from: '', avail_to: '' });
+  });
+  test.each([[{ avail_from: '2027-02-01' }], [{ avail_to: '' }], [{ avail_from: '12/01/2026' }]])('rejects bad availability %j', bad => {
+    const db = seed(); expect(() => saveSettings(db, { ...valid, ...bad })).toThrow();
+  });
   test('valid input is stored and read back', () => {
     const db = seed();
     saveSettings(db, valid);
