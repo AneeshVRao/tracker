@@ -29,13 +29,15 @@ Data lives in `data/tracker.db` (gitignored). Delete the file to start over.
    Re-importing the same workbook does not create duplicates.
 2. Open **Settings** and fill in your name, first name and a short intro. Templates use these
    as `{{my_name}}`, `{{my_first_name}}` and `{{my_intro}}`. You can also set your preferred
-   send window and the LinkedIn weekly cap here.
+   send window, the dates you are available (`{{my_dates}}`, e.g. "Dec 1, 2026 – Jan 15, 2027")
+   and the LinkedIn weekly cap here.
 3. Open **Today** to see what needs attention.
 
 ## Pages
 
 - **Today**: deadlines, follow-ups due, replies waiting, and the next batch to send.
-- **Session**: a keyboard-driven queue for working through a batch quickly.
+- **Session**: a keyboard-driven queue for working through a batch quickly. First emails show a
+  four-item pre-send checklist that must be ticked before copying (`X` ticks all).
 - **Contacts**: the full table with filters, a detail panel, the message composer, notes and undo.
 - **Deadlines**: upcoming application deadlines, including a reference list of formal programmes.
 - **Intros**: warm introduction paths between contacts.

@@ -49,3 +49,9 @@ Spec: [specs/2026-09-29-outreach-tracker-design.md](specs/2026-09-29-outreach-tr
 - [x] Stable session count while sending
 - [x] Design pass
 - [x] Public README and task list
+
+## M5 Checklist and dates — [plan](plans/2026-10-01-m5-checklist-and-dates.md)
+
+- [x] Availability window in Settings as `{{my_dates}}`, used in the default subject and body
+- [x] Pre-send checklist gates copy on first emails (`X` in Session)
+- [ ] Lists imported before M5 keep their old templates; edit them on the list page to use `{{my_dates}}`
