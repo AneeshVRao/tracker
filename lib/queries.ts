@@ -42,7 +42,7 @@ export function saveSettings(db: DB, input: Record<string, string>) {
   const [from, to] = [input.send_from, input.send_to].map(v => (/^\d+$/.test((v ?? '').trim()) ? +v.trim() : NaN));
   if (!(from >= 0 && to <= 23 && from < to)) throw new Error('Send window must be hours 0–23, with start before end');
   const values: Record<string, unknown> = {
-    my_name: ident('my_name', 'Your name'), my_first_name: ident('my_first_name', 'Your first name'), my_intro: ident('my_intro', 'Intro line'),
+    my_name: ident('my_name', 'Your name'), my_first_name: ident('my_first_name', 'Your first name'), my_intro: ident('my_intro', 'Intro line').replace(/\.+$/, ''),
     send_window: { days, from, to },
     weekly_invite_cap: n.weekly_invite_cap, company_daily_max: n.company_daily_max, email_nudge_days: [n.nudge1, n.nudge2],
     linkedin_withdraw_days: n.linkedin_withdraw_days, after_accept_followup_days: n.after_accept_followup_days,
