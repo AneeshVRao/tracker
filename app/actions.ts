@@ -28,8 +28,16 @@ export async function undoContact(id: number, only?: EventType[]) {
   if (only !== undefined && !(Array.isArray(only) && only.every(t => t === 'sent' || t === 'skipped'))) throw new Error('Invalid undo filter');
   const ok = q.undoLast(getDb(), id, only); refresh(); return ok;
 }
-export async function editContact(id: number, field: q.EditableField, value: string | null) { q.editContact(getDb(), id, field, value); refresh(); }
-export async function saveNotes(id: number, text: string) { q.setNotes(getDb(), id, text); }
+export type EditResult = { ok: true } | { ok: false; error: string };
+export async function editContact(id: number, field: q.EditableField, value: string | null): Promise<EditResult> {
+  try { q.editContact(getDb(), id, field, value); return { ok: true }; }
+  catch (e) { return { ok: false, error: message(e) }; }
+  finally { refresh(); }
+}
+export async function saveNotes(id: number, text: string): Promise<EditResult> {
+  try { q.setNotes(getDb(), id, text); return { ok: true }; }
+  catch (e) { return { ok: false, error: message(e) }; }
+}
 
 export async function bulkForm(fd: FormData) {
   const ids = fd.getAll('ids').map(Number).filter(Number.isInteger);

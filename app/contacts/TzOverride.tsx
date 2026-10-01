@@ -13,7 +13,7 @@ export function TzOverride({ id, value }: { id: number; value: string | null }) 
         onBlur={e => {
           const v = e.target.value.trim() || null;
           if (v === value) return;
-          start(async () => { setError(''); try { await editContact(id, 'tz', v); } catch { setError('Unknown time zone.'); } });
+          start(async () => { setError(''); const r = await editContact(id, 'tz', v); if (!r.ok) setError(r.error); });
         }} />
       {error && <span role="alert" className="text-xs text-bad">{error}</span>}
     </span>

@@ -8,7 +8,8 @@ export function DeadlineEditor({ id, dates, manual, today }: { id: number; dates
   const [error, setError] = useState('');
   const set = (v: string | null) => start(async () => {
     setError('');
-    try { await editContact(id, 'deadline_manual', v); } catch { setError('Could not save that date.'); }
+    const r = await editContact(id, 'deadline_manual', v);
+    if (!r.ok) setError(r.error);
   });
   return (
     <div className="space-y-1.5">

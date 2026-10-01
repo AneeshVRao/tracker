@@ -15,6 +15,7 @@ export function Composer(p: Props) {
   const [override, setOverride] = useState(false);
   const [toast, setToast] = useState('');
   const [saving, start] = useTransition();
+  const [saveError, setSaveError] = useState('');
   const limit = p.channel === 'linkedin' ? 300 : null;
   const over = limit !== null && text.length > limit;
   const blocked = hasBlockers(text) || hasBlockers(p.subject) || (over && !override);
@@ -47,7 +48,7 @@ export function Composer(p: Props) {
           {p.channel === 'email' ? 'Open in Gmail' : 'Open LinkedIn'}
         </button>
         {p.canSaveMessage && text !== p.body && (
-          <button className="btn" disabled={saving} onClick={() => start(() => editContact(p.id, 'message', text))}>Save note</button>
+          <button className="btn" disabled={saving} onClick={() => start(async () => { setSaveError(''); const r = await editContact(p.id, 'message', text); if (!r.ok) setSaveError(r.error); })}>Save note</button>
         )}
         {limit !== null && <span className={`ml-auto tabular-nums ${over ? 'text-bad' : 'text-muted'}`}>{text.length}/{limit}</span>}
       </div>
@@ -57,6 +58,7 @@ export function Composer(p: Props) {
         </label>
       )}
       {(hasBlockers(text) || hasBlockers(p.subject)) && <p className="text-xs text-warn">Replace every [[…]] before copying.</p>}
+      {saveError && <p role="alert" className="text-xs text-bad">{saveError}</p>}
       {toast && <p role="status" className="text-xs text-good">{toast}</p>}
     </div>
   );
