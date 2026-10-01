@@ -3,7 +3,7 @@ import { tx, type Contact, type DB, type EventRow, type List } from './db';
 import { addDays, applyAction, DEFAULT_SETTINGS, OPEN_STATUSES, todayIn, type Action, type EventType, type Outcome, type Settings, type Status } from './rules';
 import { norm } from './parse';
 import type { TemplateSet } from './template';
-import { activityStats, orgsSentToday } from './today';
+import { activityStats, OPEN_SQL, orgsSentToday } from './today';
 
 export function getSettings(db: DB): Settings {
   const rows = db.prepare('SELECT key, value FROM settings').all() as { key: string; value: string }[];
@@ -67,7 +67,7 @@ export function listContacts(db: DB, f: Filters, now = new Date()): { rows: Cont
   const args: SQLInputValue[] = [];
   const add = (sql: string, ...v: SQLInputValue[]) => { where.push(sql); args.push(...v); };
   if (f.list) add('list_id = ?', f.list);
-  if (f.status === 'open') where.push("status IN ('to_contact','sent','accepted','replied','conversation')");
+  if (f.status === 'open') where.push(`status IN ${OPEN_SQL}`);
   else if (f.status) add('status = ?', f.status);
   if (f.priority) add('priority = ?', f.priority);
   if (f.conf === 'none') where.push('email IS NULL');

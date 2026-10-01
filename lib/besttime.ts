@@ -1,6 +1,6 @@
 export type SendWindow = { days: number[]; from: number; to: number };
 
-export const COUNTRY_TZ: Record<string, string> = {
+const COUNTRY_TZ: Record<string, string> = {
   india: 'Asia/Kolkata', usa: 'America/New_York', us: 'America/New_York', 'united states': 'America/New_York',
   uk: 'Europe/London', 'united kingdom': 'Europe/London', england: 'Europe/London', scotland: 'Europe/London',
   'hong kong': 'Asia/Hong_Kong', singapore: 'Asia/Singapore', canada: 'America/Toronto', netherlands: 'Europe/Amsterdam',

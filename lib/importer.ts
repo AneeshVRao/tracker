@@ -28,7 +28,7 @@ export type ParsedRow = {
 export const headerSig = (headers: string[]) =>
   createHash('sha1').update(headers.map(h => h.trim().toLowerCase()).join('\u0001')).digest('hex');
 
-export function rowToContact(values: Record<string, string>, m: Mapping, projects: string[]): ParsedRow {
+function rowToContact(values: Record<string, string>, m: Mapping, projects: string[]): ParsedRow {
   const get = (f: Field) => { const col = m[f]; return col ? (values[col] ?? '').trim() : ''; };
   const orNull = (v: string) => v || null;
   const { email, confidence } = parseEmail(get('email'));

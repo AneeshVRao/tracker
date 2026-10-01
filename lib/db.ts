@@ -25,7 +25,7 @@ export type Contact = {
 
 export type EventRow = { id: number; contact_id: number; type: EventType; at: string; data: string | null; reverted: number };
 
-export const SCHEMA = `
+const SCHEMA = `
 CREATE TABLE IF NOT EXISTS lists (
   id INTEGER PRIMARY KEY,
   name TEXT NOT NULL,
