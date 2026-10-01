@@ -75,3 +75,9 @@ describe('keys and projects', () => {
   });
   test('nameOrgKey tolerates null org', () => expect(nameOrgKey('A', null)).toBe('a|'));
 });
+
+describe('parse robustness', () => {
+  test('the word "may" is not a yearless month', () => expect(parseDeadlines('This may 3 be delayed; decision in 2027')).toEqual([]));
+  test('full May dates still parse', () => expect(parseDeadlines('Closes May 15, 2027')).toEqual(['2027-05-15']));
+  test('mutual stops at a line break', () => expect(parseDegree('2nd - mutual: Priya Example\nsee notes')).toEqual({ degree: '2nd', mutual: 'Priya Example' }));
+});

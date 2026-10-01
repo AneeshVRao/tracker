@@ -18,7 +18,7 @@ const RULES: Record<Field, { syn: string[]; neg?: string[] }> = {
   org: { syn: ['current company', 'company', 'institute/university', 'institute', 'university', 'host'], neg: ['signal', 'type'] },
   role: { syn: ['current title', 'title', 'position/seniority', 'position'] },
   country: { syn: ['country'] },
-  email: { syn: ['email (verified vs inferred)', 'email'], neg: ['status'] },
+  email: { syn: ['email (verified vs inferred)', 'email'], neg: ['status', 'angle'] },
   linkedin_url: { syn: ['linkedin profile url', 'linkedin url', 'linkedin'], neg: ['status', 'headline', 'note'] },
   message: { syn: ['connection note', 'linkedin connection request note', 'specific email angle', 'email angle'], neg: ['visa', 'notes'] },
   priority: { syn: ['fit rating', 'priority'], neg: ['basis'] },
@@ -36,8 +36,8 @@ export function guessMapping(headers: string[]): Mapping {
   const m: Mapping = {};
   for (const f of FIELDS) {
     const { syn, neg = [] } = RULES[f];
-    const ok = headers.filter(h => h.trim() && !neg.some(n => lc(h).includes(n)));
-    const hit = ok.find(h => syn.includes(lc(h))) ?? syn.map(w => ok.find(h => hasWord(lc(h), w))).find(Boolean);
+    const ok = headers.filter(h => h.trim() && !neg.some(n => hasWord(lc(h), n)));
+    const hit = syn.map(s => ok.find(h => lc(h) === s)).find(Boolean) ?? syn.map(w => ok.find(h => hasWord(lc(h), w))).find(Boolean);
     if (hit) m[f] = hit;
   }
   return m;

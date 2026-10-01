@@ -25,6 +25,16 @@ describe('guessMapping on real headers', () => {
     name: 'Name', linkedin_url: 'LinkedIn URL', message: 'Connection Note (<=300 chars)', status: 'Status',
   }));
   test('Formal Programmes', () => expect(guessMapping(PROGRAMMES)).toEqual({ name: 'programme', org: 'host', deadline: 'deadline' }));
+  test('exact matches follow synonym order', () => expect(guessMapping(['Name', 'Full Name', 'x']).name).toBe('Full Name'));
+  test('negative terms match whole words only', () => {
+    expect(guessMapping(['Profile Name', 'a', 'b']).name).toBe('Profile Name');
+    expect(guessMapping(['Thread Status', 'a', 'b']).status).toBe('Thread Status');
+  });
+  test('an Email Angle column is not an email column', () => {
+    const m = guessMapping(['Name', 'Specific Email Angle', 'x']);
+    expect(m.email).toBeUndefined();
+    expect(m.message).toBe('Specific Email Angle');
+  });
 });
 
 describe('tab guesses', () => {

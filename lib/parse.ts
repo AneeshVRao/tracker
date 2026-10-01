@@ -35,12 +35,13 @@ export function parsePriority(cell: unknown): 1 | 2 | 3 {
 export function parseDegree(cell: unknown): { degree: string | null; mutual: string | null } {
   const s = str(cell).trim();
   const degree = /^1st/i.test(s) ? '1st' : /^2nd/i.test(s) ? '2nd' : /^3rd/i.test(s) ? '3rd+' : null;
-  const m = s.match(/mutual:\s*(.+)$/i);
+  const m = s.match(/mutual:\s*([^\r\n]+)/i);
   return { degree, mutual: m ? m[1].trim() : null };
 }
 
 // ---- deadlines -------------------------------------------------------------
 const MON = '(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\.?';
+const MON_NOT_MAY = MON.replace('|may|', '|');
 const D = '(\\d{1,2})(?:st|nd|rd|th)?';
 const monthIdx = (m: string) => ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'].indexOf(m.slice(0, 3).toLowerCase()) + 1;
 
@@ -57,8 +58,8 @@ const DATE_RULES: [RegExp, (m: string[], after: string) => string | null][] = [
   [new RegExp(`\\b${MON}\\s+${D},?\\s+(\\d{4})\\b`, 'gi'), m => iso(+m[3], monthIdx(m[1]), +m[2])], // Sep 29th, 2026
   [new RegExp(`\\b${D}\\s+${MON},?\\s+(\\d{4})\\b`, 'gi'), m => iso(+m[3], monthIdx(m[2]), +m[1])], // 30 November 2026
   [/\b(\d{4})-(\d{2})-(\d{2})\b/g, m => iso(+m[1], +m[2], +m[3])], // 2026-09-25
-  [new RegExp(`\\b${MON}\\s+${D}\\b`, 'gi'), (m, after) => iso(yearAfter(after), monthIdx(m[1]), +m[2])], // Nov 10 … 2026
-  [new RegExp(`\\b${D}\\s+${MON}\\b`, 'gi'), (m, after) => iso(yearAfter(after), monthIdx(m[2]), +m[1])], // 10 November … 2026
+  [new RegExp(`\\b${MON_NOT_MAY}\\s+${D}\\b`, 'gi'), (m, after) => iso(yearAfter(after), monthIdx(m[1]), +m[2])], // Nov 10 … 2026
+  [new RegExp(`\\b${D}\\s+${MON_NOT_MAY}\\b`, 'gi'), (m, after) => iso(yearAfter(after), monthIdx(m[2]), +m[1])], // 10 November … 2026
 ];
 
 export function parseDeadlines(cell: unknown): string[] {
