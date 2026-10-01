@@ -23,7 +23,7 @@ export default async function ListPage({ params }: { params: Promise<{ id: strin
         <form action={saveTemplatesForm} className="space-y-4">
           <input type="hidden" name="id" value={list.id} />
           {/* keep templates of the other channel's fields as hidden inputs so saving never wipes them */}
-          {(Object.keys(t) as (keyof TemplateSet)[]).filter(k => !TEMPLATE_FIELDS[list.channel!].some(([f]) => f === k)).map(k => <input key={k} type="hidden" name={k} value={t[k] ?? ''} />)}
+          {(['subject', 'body', 'followup1', 'followup2', 'after_accept'] as const).filter(k => !TEMPLATE_FIELDS[list.channel!].some(([f]) => f === k)).map(k => <input key={k} type="hidden" name={k} value={t[k] ?? ''} />)}
           {TEMPLATE_FIELDS[list.channel].map(([k, label]) => (
             <label key={k} className="block space-y-1">
               <span className="label">{label}</span>

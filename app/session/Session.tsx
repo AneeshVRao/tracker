@@ -23,6 +23,7 @@ type Done = Record<number, 'sent' | 'skipped'>;
 export function Session({ ids, n, initialItems, total, deferred, orgsToday, companyMax, invites }: Props) {
   const router = useRouter();
   const [items] = useState(initialItems); // frozen: server revalidation must not shift the batch
+  const [totalAtStart] = useState(total);
   const busy = useRef(false);
   const [i, setI] = useState(0);
   const [done, setDone] = useState<Done>({});
@@ -126,7 +127,7 @@ export function Session({ ids, n, initialItems, total, deferred, orgsToday, comp
         <span>{sent} sent · {acted - sent} skipped</span>
         {eta && <span>~{eta} min left</span>}
         {hasLinkedIn && <span className={pct >= 1 ? 'text-bad' : pct >= 0.8 ? 'text-warn' : ''}>Invites this week {used}/{invites.cap}</span>}
-        {(deferred > 0 || total > items.length) && <span>{total - items.length > 0 ? `${total - items.length} more after this batch` : ''}{deferred ? ` · ${deferred} held for company spacing` : ''}</span>}
+        {(deferred > 0 || totalAtStart > items.length) && <span>{totalAtStart - items.length > 0 ? `${totalAtStart - items.length} more after this batch` : ''}{deferred ? ` · ${deferred} held for company spacing` : ''}</span>}
         <Link href="/today" className="ml-auto hover:text-fg">Exit (Esc)</Link>
       </header>
 
