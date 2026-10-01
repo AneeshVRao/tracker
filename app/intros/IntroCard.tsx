@@ -31,11 +31,11 @@ export function IntroCard({ mutual, contacts, me }: { mutual: string; contacts: 
   return (
     <section className="card space-y-3 p-4">
       <header className="flex flex-wrap items-baseline gap-2">
-        <h2 className="font-medium">{mutual}</h2>
+        <h2 className="section-title text-sm">{mutual}</h2>
         <span className="text-xs text-muted">knows {contacts.length} {contacts.length === 1 ? 'person' : 'people'} you want to reach</span>
-        {lastAsked && <span className="ml-auto text-xs text-muted">Asked {lastAsked.slice(0, 10)}</span>}
+        {lastAsked && <span className="ml-auto text-xs text-good">Asked {lastAsked.slice(0, 10)}</span>}
       </header>
-      <ul className="space-y-0.5 text-xs">
+      <ul className="space-y-1 rounded-md bg-sunken px-3 py-2 text-xs">
         {contacts.map(c => (
           <li key={c.id}>
             <Link href={`/contacts?open=${c.id}`} className="font-medium hover:text-accent">{c.name}</Link>
@@ -44,7 +44,7 @@ export function IntroCard({ mutual, contacts, me }: { mutual: string; contacts: 
           </li>
         ))}
       </ul>
-      <textarea value={text} onChange={e => setText(e.target.value)} rows={5} className="input w-full text-[13px] leading-relaxed" aria-label={`Intro request to ${mutual}`} />
+      <textarea value={text} onChange={e => setText(e.target.value)} rows={5} className="input w-full resize-y text-[13px] leading-relaxed" aria-label={`Intro request to ${mutual}`} />
       <div className="flex flex-wrap items-center gap-1.5">
         <button type="button" className="btn-primary" disabled={pending || hasBlockers(text)} onClick={copyAndLog}>Copy &amp; log request</button>
         {msg && <span role={msg.ok ? 'status' : 'alert'} className={`text-xs ${msg.ok ? 'text-good' : 'text-bad'}`}>{msg.text}</span>}

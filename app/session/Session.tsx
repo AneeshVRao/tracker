@@ -121,15 +121,16 @@ export function Session({ ids, n, initialItems, total, deferred, orgsToday, comp
   const pct = used / invites.cap;
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-3xl flex-col gap-4 p-6">
-      <header className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted">
-        <span className="text-[13px] font-medium text-fg">{Math.min(i + 1, items.length)} / {items.length}</span>
+    <div className="mx-auto flex min-h-screen max-w-3xl flex-col gap-4 p-6 pb-0">
+      <header className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted">
+        <span className="rounded-full bg-sunken px-2.5 py-0.5 text-[13px] font-semibold tabular-nums text-fg">{Math.min(i + 1, items.length)} / {items.length}</span>
         <span>{sent} sent · {acted - sent} skipped</span>
         {eta && <span>~{eta} min left</span>}
         {hasLinkedIn && <span className={pct >= 1 ? 'text-bad' : pct >= 0.8 ? 'text-warn' : ''}>Invites this week {used}/{invites.cap}</span>}
         {(deferred > 0 || totalAtStart > items.length) && <span>{totalAtStart - items.length > 0 ? `${totalAtStart - items.length} more after this batch` : ''}{deferred ? ` · ${deferred} held for company spacing` : ''}</span>}
-        <Link href="/today" className="ml-auto hover:text-fg">Exit (Esc)</Link>
+        <Link href="/today" className="ml-auto rounded-md px-1.5 py-0.5 hover:bg-line/60 hover:text-fg">Exit (Esc)</Link>
       </header>
+      <div aria-hidden className="-mt-2 h-0.5 overflow-hidden rounded-full bg-line"><div className="h-full bg-accent transition-[width] duration-200" style={{ width: `${items.length ? (acted / items.length) * 100 : 0}%` }} /></div>
 
       {!item ? (
         <div className="card space-y-3 p-6 text-center">
@@ -141,27 +142,27 @@ export function Session({ ids, n, initialItems, total, deferred, orgsToday, comp
           </div>
         </div>
       ) : (
-        <article className="card space-y-4 p-5">
+        <article className="card space-y-4 border-accent/40 p-6 shadow-sm ring-1 ring-accent/15">
           <header className="space-y-1">
             <div className="flex flex-wrap items-baseline gap-2">
-              <h1 className="text-base font-semibold tracking-tight">{item.name}</h1>
-              {done[item.id] && <span className="text-xs text-good">{done[item.id] === 'sent' ? 'Sent' : 'Skipped'}</span>}
+              <h1 className="text-xl font-semibold tracking-tight">{item.name}</h1>
+              {done[item.id] && <span className="rounded-full border border-good/30 bg-good/10 px-2 py-px text-xs font-medium text-good">{done[item.id] === 'sent' ? 'Sent' : 'Skipped'}</span>}
             </div>
-            <p className="text-muted">{[item.role, item.org].filter(Boolean).join(' · ')}</p>
+            <p className="text-[14px] text-fg/80">{[item.role, item.org].filter(Boolean).join(' · ')}</p>
             <p className="flex flex-wrap gap-x-3 text-xs text-muted">
               <span>{item.list_name}</span>
               <span>Priority {['', 'low', 'medium', 'high'][item.priority]}</span>
               {item.next_deadline && <span className="text-warn">Deadline {item.next_deadline}</span>}
               {item.mutual && <span>Mutual: {item.mutual}</span>}
             </p>
-            {item.dup_list && <p role="alert" className="text-xs text-warn">Already contacted via {item.dup_list}. Don&apos;t message the same person twice — skip (K).</p>}
+            {item.dup_list && <p role="alert" className="notice-warn">Already contacted via {item.dup_list}. Don&apos;t message the same person twice — skip (K).</p>}
             {item.best && (item.best.good
-              ? <p className="text-xs text-good">Good time to send: it&apos;s {item.best.theirs} for them.</p>
+              ? <p className="notice-good">Good time to send: it&apos;s {item.best.theirs} for them.</p>
               : <p className="text-xs text-muted">Their time {item.best.theirs}. Best slot {item.best.slotTheirs} theirs ({item.best.slotMine} yours). Use Gmail Schedule send.</p>)}
           </header>
 
           {orgFull(item, orgCount) && !done[item.id] && (
-            <p role="status" className="text-xs text-warn">You already contacted someone at {item.org} today. Skip for now (→) or send anyway (S).</p>
+            <p role="status" className="notice-warn">You already contacted someone at {item.org} today. Skip for now (→) or send anyway (S).</p>
           )}
 
           <Composer
@@ -170,10 +171,10 @@ export function Session({ ids, n, initialItems, total, deferred, orgsToday, comp
             subject={item.subject} body={item.body} firstEmail={item.channel === 'email'} canSaveMessage={item.canSaveMessage}
           />
 
-          <div className="flex flex-wrap items-center gap-1.5">
-            <button className="btn-primary" disabled={pending || !!done[item.id]} onClick={() => act('sent')}>Mark sent <kbd className="opacity-70">S</kbd></button>
-            <button className="btn" disabled={pending || !!done[item.id]} onClick={() => act('skip')}>Skip <kbd className="opacity-70">K</kbd></button>
-            <button className="btn" disabled={pending} onClick={undo}>Undo <kbd className="opacity-70">U</kbd></button>
+          <div className="flex flex-wrap items-center gap-1.5 border-t border-line pt-4">
+            <button className="btn-primary" disabled={pending || !!done[item.id]} onClick={() => act('sent')}>Mark sent <kbd className="kbd">S</kbd></button>
+            <button className="btn" disabled={pending || !!done[item.id]} onClick={() => act('skip')}>Skip <kbd className="kbd">K</kbd></button>
+            <button className="btn" disabled={pending} onClick={undo}>Undo <kbd className="kbd">U</kbd></button>
             <span className="ml-auto flex gap-1.5">
               <button className="btn" aria-label="Previous contact" disabled={i === 0} onClick={() => move(-1)}>←</button>
               <button className="btn" aria-label="Next contact" onClick={() => move(1)}>→</button>
@@ -181,17 +182,17 @@ export function Session({ ids, n, initialItems, total, deferred, orgsToday, comp
           </div>
 
           {limitHit && (
-            <div role="alert" className="flex flex-wrap items-center gap-2 rounded-md border border-warn/40 bg-warn/10 px-2 py-1.5 text-xs text-warn">
+            <div role="alert" className="notice-warn flex flex-wrap items-center gap-2">
               You&apos;ve reached {used}/{invites.cap} LinkedIn invites this week. Sending more risks a restriction.
               <button className="btn" disabled={pending} onClick={() => act('sent', true)}>Send anyway</button>
             </div>
           )}
-          {msg && <p role="alert" className="text-xs text-bad">{msg}</p>}
+          {msg && <p role="alert" className="notice-bad">{msg}</p>}
         </article>
       )}
 
-      <footer className="mt-auto text-center text-xs text-muted">
-        <kbd>C</kbd> copy · <kbd>O</kbd> open · <kbd>S</kbd> sent · <kbd>K</kbd> skip · <kbd>E</kbd> edit · <kbd>U</kbd> undo · <kbd>←</kbd>/<kbd>→</kbd> move · <kbd>Esc</kbd> exit
+      <footer className="sticky bottom-0 -mx-6 mt-auto flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-t border-line bg-bg/90 px-6 py-2.5 text-xs text-muted backdrop-blur">
+        <kbd className="kbd">C</kbd> copy · <kbd className="kbd">O</kbd> open · <kbd className="kbd">S</kbd> sent · <kbd className="kbd">K</kbd> skip · <kbd className="kbd">E</kbd> edit · <kbd className="kbd">U</kbd> undo · <kbd className="kbd">←</kbd>/<kbd className="kbd">→</kbd> move · <kbd className="kbd">Esc</kbd> exit
       </footer>
     </div>
   );

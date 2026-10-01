@@ -28,9 +28,9 @@ export function SettingsForm({ s }: { s: Settings }) {
   const [gen, setGen] = useState(0);
   if (state !== seen) { setSeen(state); setGen(gen + 1); }
   return (
-    <form key={gen} action={action} className="card divide-y divide-line">
+    <form key={gen} action={action} className="card divide-y divide-line overflow-hidden">
       {ROWS(s).map(([name, label, value, hint]) => (
-        <label key={name} className="grid gap-1 px-4 py-3 sm:grid-cols-[15rem_12rem_1fr] sm:items-center sm:gap-3">
+        <label key={name} className="grid gap-1 px-4 py-3 focus-within:bg-sunken/50 hover:bg-sunken/50 sm:grid-cols-[15rem_12rem_1fr] sm:items-center sm:gap-3">
           <span className="font-medium">{label}</span>
           <input name={name} defaultValue={state?.values?.[name] ?? String(value)} className="input" />
           <span className="text-xs text-muted">{hint}</span>
@@ -54,9 +54,9 @@ export function SettingsForm({ s }: { s: Settings }) {
           </div>
         </div>
       </fieldset>
-      <div className="flex items-center gap-3 px-4 py-3">
+      <div className="flex items-center gap-3 bg-sunken/40 px-4 py-3">
         <button className="btn-primary" disabled={pending}>{pending ? 'Saving…' : 'Save settings'}</button>
-        {state && <p role={state.ok ? 'status' : 'alert'} className={`text-xs ${state.ok ? 'text-good' : 'text-bad'}`}>{state.message}</p>}
+        {state && <p role={state.ok ? 'status' : 'alert'} className={state.ok ? 'notice-good' : 'notice-bad'}>{state.message}</p>}
       </div>
     </form>
   );

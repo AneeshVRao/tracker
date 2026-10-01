@@ -19,20 +19,20 @@ export default async function DeadlinesPage({ searchParams }: { searchParams: Pr
   const tone = (d: number) => (d <= 7 ? 'text-bad' : d <= 21 ? 'text-warn' : 'text-muted');
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 p-6">
+    <div className="mx-auto max-w-5xl space-y-6 p-6">
       <header className="flex flex-wrap items-end gap-3">
         <h1 className="page-title mr-auto">Deadlines</h1>
-        <nav aria-label="Window" className="flex gap-1">
+        <nav aria-label="Window" className="flex gap-1 rounded-lg bg-sunken p-0.5">
           {WINDOWS.map(w => <Link key={w} href={`/deadlines?within=${w}`} className={w === within ? 'btn-primary' : 'btn'} aria-current={w === within ? 'page' : undefined}>{w} days</Link>)}
         </nav>
       </header>
 
       <section className="space-y-2">
-        <h2 className="font-medium">Contacts with a deadline in the next {within} days ({contacts.length})</h2>
+        <h2 className="section-title">Contacts with a deadline in the next {within} days ({contacts.length})</h2>
         {contacts.length === 0 ? <Empty>No contact deadlines in this window.</Empty> : (
-          <div className="card divide-y divide-line">
+          <div className="card divide-y divide-line overflow-hidden">
             {contacts.map(c => (
-              <div key={c.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5">
+              <div key={c.id} className="row">
                 <span className={`w-28 font-mono text-xs tabular-nums ${tone(c.days)}`}>{c.next}</span>
                 <span className={`w-16 text-xs ${tone(c.days)}`}>{c.days === 0 ? 'today' : `in ${c.days}d`}</span>
                 <div className="min-w-0 flex-1">
@@ -48,10 +48,10 @@ export default async function DeadlinesPage({ searchParams }: { searchParams: Pr
 
       {refs.length > 0 && (
         <section className="space-y-2">
-          <h2 className="font-medium">Programmes and reference deadlines</h2>
-          <div className="card divide-y divide-line">
+          <h2 className="section-title">Programmes and reference deadlines</h2>
+          <div className="card divide-y divide-line overflow-hidden">
             {refs.map(r => (
-              <div key={r.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5">
+              <div key={r.id} className="row">
                 <span className={`w-28 font-mono text-xs tabular-nums ${r.days === null ? 'text-muted' : tone(r.days)}`}>{r.next ?? '—'}</span>
                 <div className="min-w-0 flex-1">
                   <span className="font-medium">{r.url ? <a href={r.url} target="_blank" rel="noopener noreferrer" className="hover:text-accent">{r.name}</a> : r.name}</span>

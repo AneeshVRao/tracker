@@ -33,7 +33,7 @@ export default function TodayPage() {
   const open = (id: number) => `/contacts?open=${id}`;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 p-6">
+    <div className="mx-auto max-w-5xl space-y-6 p-6">
       <header className="flex flex-wrap items-end gap-x-8 gap-y-3">
         <h1 className="page-title mr-auto">Today <span className="font-normal text-muted">{today}</span></h1>
         <Stat label="LinkedIn invites this week" value={`${stats.invitesWeek}/${stats.cap}`} tone={pct >= 1 ? 'text-bad' : pct >= 0.8 ? 'text-warn' : ''} />
@@ -84,7 +84,7 @@ export default function TodayPage() {
 
       <Section title="Next up">
         {nextUp.map(({ l, items, deferred }) => (
-          <div key={l.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3">
+          <div key={l.id} className="row py-3">
             <span className="w-48 font-medium">{l.name}</span>
             <span className="text-xs text-muted">{items.length} ready{deferred ? ` · ${deferred} waiting (company spacing)` : ''}</span>
             <span className="min-w-0 flex-1 truncate text-xs text-muted">{items.slice(0, 10).map(i => i.name).join(', ')}</span>
@@ -93,27 +93,27 @@ export default function TodayPage() {
         ))}
       </Section>
 
-      {!deadlines.length && !due.length && !replies.length && <p className="text-muted">No follow-ups due. Start a session to send new messages.</p>}
+      {!deadlines.length && !due.length && !replies.length && <p className="card px-4 py-6 text-center text-muted">No follow-ups due. Start a session to send new messages.</p>}
     </div>
   );
 }
 
 function Stat({ label, value, tone = '' }: { label: string; value: string | number; tone?: string }) {
-  return <div><div className="label">{label}</div><div className={`text-lg font-semibold tabular-nums ${tone}`}>{value}</div></div>;
+  return <div className="rounded-md bg-sunken px-3 py-1.5"><div className="label">{label}</div><div className={`text-lg font-semibold leading-tight tabular-nums ${tone}`}>{value}</div></div>;
 }
 
 function Section({ title, extra, children }: { title: string; extra?: React.ReactNode; children: React.ReactNode }) {
   return (
     <section className="space-y-2">
-      <div className="flex items-center gap-3"><h2 className="font-medium">{title}</h2><div className="ml-auto">{extra}</div></div>
-      <div className="card divide-y divide-line">{children}</div>
+      <div className="flex items-center gap-3"><h2 className="section-title">{title}</h2><div className="ml-auto">{extra}</div></div>
+      <div className="card divide-y divide-line overflow-hidden">{children}</div>
     </section>
   );
 }
 
 function Row({ href, name, sub, children }: { href: string; name: string; sub: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5">
+    <div className="row">
       <div className="min-w-0 flex-1">
         <Link href={href} className="font-medium hover:text-accent">{name}</Link>
         <div className="truncate text-xs text-muted">{sub}</div>

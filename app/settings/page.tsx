@@ -7,8 +7,8 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-4 p-6">
       <h1 className="page-title">Settings</h1>
-      {!s.my_name && <p role="status" className="card p-3 text-sm">Set your name so message templates can sign off for you.</p>}
-      <p className="text-muted">Timings for follow-ups and the LinkedIn safety limits. Changes apply to the next action you take; existing follow-up dates stay as they are.</p>
+      {!s.my_name && <p role="status" className="notice-warn text-[13px]">Set your name so message templates can sign off for you.</p>}
+      <p className="max-w-[65ch] text-muted">Timings for follow-ups and the LinkedIn safety limits. Changes apply to the next action you take; existing follow-up dates stay as they are.</p>
       <SettingsForm s={s} />
     </div>
   );

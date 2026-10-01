@@ -27,17 +27,17 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
           <button className="btn">Group</button>
         </form>
       </header>
-      <p className="text-muted">Counts only contacts you marked sent. Accepted applies to LinkedIn invites. Groups with fewer than 5 sends are greyed out: too few to trust.</p>
+      <p className="max-w-[65ch] text-muted">Counts only contacts you marked sent. Accepted applies to LinkedIn invites. Groups with fewer than 5 sends are greyed out: too few to trust.</p>
       {rows.length === 0 ? <Empty>No sends yet. Stats appear once you start marking messages sent. <Link href="/session" className="text-accent underline">Start a session</Link>.</Empty> : (
         <div className="card overflow-x-auto">
           <table className="w-full min-w-[640px] text-left">
-            <thead><tr>
+            <thead className="border-b border-line bg-sunken/60"><tr>
               <th className="th">Group</th><th className="th text-right">Sent</th><th className="th text-right">Accepted</th>
               <th className="th text-right">Replied</th><th className="th text-right">Reply rate</th><th className="th text-right">Median days to reply</th>
             </tr></thead>
             <tbody>{rows.map(r => (
-              <tr key={r.key} className={`border-t border-line tabular-nums ${r.sent < 5 ? 'text-muted' : ''}`}>
-                <td className="px-3 py-1.5">{r.key}{r.sent < 5 && <span className="ml-2 text-xs">small sample</span>}</td>
+              <tr key={r.key} className={`border-t border-line tabular-nums first:border-t-0 hover:bg-sunken [&>td]:py-2 ${r.sent < 5 ? 'text-muted' : ''}`}>
+                <td className="px-3 py-1.5">{r.key}{r.sent < 5 && <span className="ml-2 rounded-full border border-line px-1.5 py-px text-xs">small sample</span>}</td>
                 <td className="px-3 text-right">{r.sent}</td>
                 <td className="px-3 text-right">{r.linkedinSent ? `${r.accepted} (${pct(r.accepted, r.linkedinSent)})` : '—'}</td>
                 <td className="px-3 text-right">{r.replied}</td>
