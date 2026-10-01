@@ -18,13 +18,10 @@ Spec: [specs/2026-09-29-outreach-tracker-design.md](specs/2026-09-29-outreach-tr
 
 **Done when:** all three workbooks import as 250 / 30 (reference) / 466 / 234 / 50 with 11 professors skipped; re-import changes nothing; copy → open → mark sent → undo works; export opens in Excel.
 
-### Known follow-ups from M1 reviews (none block use)
+### Known follow-ups from M1 reviews
 
-- Header auto-mapping: exact-match pass ignores synonym order; negative terms match substrings; a sheet with "Email Angle" but no Email column maps email→angle (the wizard shows it, fix by hand).
-- Deadline parsing: yearless/"may" false positives beyond the documented one; `parseDegree` misses multi-line cells.
-- Session: header's 'more after this batch' count drifts as you send (cosmetic); ←/→-passed contacts aren't revisited automatically.
-- Below 1280px the contact panel stacks above the table (tab order ≠ visual order); `next/font` fetches Geist at build time.
-- `editContact` / `bulkForm` / `closeStaleForm` / `saveNotes` server actions still throw instead of returning `{ error }` (only `actContact` returns a result).
+- Below 1280px the contact panel stacks above the table (tab order differs from visual order).
+- `next/font` fetches Geist at build time.
 
 ## M2 Daily driver — [plan](plans/2026-09-30-m2-daily-driver.md)
 
@@ -42,6 +39,11 @@ Spec: [specs/2026-09-29-outreach-tracker-design.md](specs/2026-09-29-outreach-tr
 - [x] What-gets-replies stats (F12)
 - [x] Duplicate warnings across lists (F13) beyond the M1 badge
 
-### Known follow-ups from M3
+## M4 Finish — [plan](plans/2026-09-30-m4-finish-and-publish.md)
 
-- Best-time slots use a fixed Tue–Thu 09:00–11:00 window (send_window is not editable in Settings yet).
+- [x] Identity and send window in Settings (`{{my_name}}`, `{{my_first_name}}`, `{{my_intro}}`)
+- [x] Edit actions return inline errors instead of throwing
+- [x] Header mapping and cell parsing robustness fixes
+- [x] Stable session count while sending
+- [x] Design pass
+- [x] Public README and task list
