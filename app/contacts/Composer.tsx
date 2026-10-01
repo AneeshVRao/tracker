@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { editContact } from '@/app/actions';
 import type { EmailConfidence } from '@/lib/parse';
-import { gmailComposeUrl, hasBlockers } from '@/lib/template';
+import { PRESEND_CHECKS, gmailComposeUrl, hasBlockers } from '@/lib/template';
 
 type Props = {
   id: number; channel: 'email' | 'linkedin'; to: string | null; confidence: EmailConfidence | null; linkedinUrl: string | null;
@@ -18,7 +18,10 @@ export function Composer(p: Props) {
   const [saveError, setSaveError] = useState('');
   const limit = p.channel === 'linkedin' ? 300 : null;
   const over = limit !== null && text.length > limit;
-  const blocked = hasBlockers(text) || hasBlockers(p.subject) || (over && !override);
+  const gated = p.channel === 'email' && p.firstEmail;
+  const [checked, setChecked] = useState<boolean[]>(() => PRESEND_CHECKS.map(() => false));
+  const unchecked = gated && checked.includes(false);
+  const blocked = hasBlockers(text) || hasBlockers(p.subject) || (over && !override) || unchecked;
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(''), 2500); };
 
   const write = async () => {
@@ -38,10 +41,23 @@ export function Composer(p: Props) {
       {p.channel === 'email' && !p.to && <p className="text-xs text-bad">No email address in the sheet.</p>}
       {p.channel === 'email' && p.confidence === 'inferred' && <p className="text-xs text-warn">Inferred email ({p.to}). Verify it before sending.</p>}
       {p.channel === 'linkedin' && !p.linkedinUrl && <p className="text-xs text-bad">No LinkedIn URL in the sheet.</p>}
-      {p.firstEmail && <p className="text-xs text-muted">Attach your CV.</p>}
       {p.subject && <p><span className="label mr-1">Subject</span>{' '}{p.subject}</p>}
       <textarea data-cmd="edit" value={text} onChange={e => setText(e.target.value)} rows={p.channel === 'email' ? 14 : 6}
         className="input w-full font-mono text-[12.5px] leading-relaxed" aria-label="Message" />
+      {gated && (
+        <fieldset className="space-y-1 text-xs">
+          <legend className="label">Before you send</legend>
+          {PRESEND_CHECKS.map((label, i) => (
+            <label key={label} className="flex items-center gap-2">
+              <input type="checkbox" checked={checked[i]} onChange={e => setChecked(c => c.map((v, j) => (j === i ? e.target.checked : v)))} />
+              {label}
+            </label>
+          ))}
+          <button type="button" data-cmd="checks" className="btn" onClick={() => setChecked(c => c.map(() => !c.every(Boolean)))}>
+            {checked.every(Boolean) ? 'Untick all' : 'Tick all'}
+          </button>
+        </fieldset>
+      )}
       <div className="flex flex-wrap items-center gap-1.5">
         <button data-cmd="copy" onClick={copy} disabled={blocked} className="btn-primary">Copy</button>
         <button data-cmd="open" onClick={open} disabled={p.channel === 'email' ? !p.to || blocked : !p.linkedinUrl} className="btn">
@@ -58,6 +74,7 @@ export function Composer(p: Props) {
         </label>
       )}
       {(hasBlockers(text) || hasBlockers(p.subject)) && <p className="text-xs text-warn">Replace every [[…]] before copying.</p>}
+      {unchecked && <p className="text-xs text-warn">Tick the checklist to copy.</p>}
       {saveError && <p role="alert" className="text-xs text-bad">{saveError}</p>}
       {toast && <p role="status" className="text-xs text-good">{toast}</p>}
     </div>

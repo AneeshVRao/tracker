@@ -76,6 +76,13 @@ export function render(tpl: string, c: TemplateContext): { text: string; missing
   return { text, missing };
 }
 
+export const PRESEND_CHECKS = [
+  'Cites a specific paper or project of theirs',
+  'Links one piece of my own work',
+  'States my exact dates',
+  'CV attached in Gmail (links cannot attach it)',
+] as const;
+
 export const hasBlockers = (text: string) => /\[\[[^\]]*\]\]/.test(text);
 
 export function pickTemplate(status: Status, step: number, ch: Channel): TemplateKey {

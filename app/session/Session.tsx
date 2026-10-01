@@ -99,6 +99,7 @@ export function Session({ ids, n, initialItems, total, deferred, orgsToday, comp
       const k = e.key.toLowerCase();
       if (k === 'c') click('copy');
       else if (k === 'o') click('open');
+      else if (k === 'x') click('checks');
       else if (k === 's') act('sent');
       else if (k === 'k') act('skip');
       else if (k === 'e') (document.querySelector('[data-cmd="edit"]') as HTMLElement | null)?.focus();
@@ -192,7 +193,7 @@ export function Session({ ids, n, initialItems, total, deferred, orgsToday, comp
       )}
 
       <footer className="sticky bottom-0 -mx-6 mt-auto flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-t border-line bg-bg/90 px-6 py-2.5 text-xs text-muted backdrop-blur">
-        <kbd className="kbd">C</kbd> copy · <kbd className="kbd">O</kbd> open · <kbd className="kbd">S</kbd> sent · <kbd className="kbd">K</kbd> skip · <kbd className="kbd">E</kbd> edit · <kbd className="kbd">U</kbd> undo · <kbd className="kbd">←</kbd>/<kbd className="kbd">→</kbd> move · <kbd className="kbd">Esc</kbd> exit
+        <kbd className="kbd">C</kbd> copy · <kbd className="kbd">O</kbd> open · <kbd className="kbd">X</kbd> checklist · <kbd className="kbd">S</kbd> sent · <kbd className="kbd">K</kbd> skip · <kbd className="kbd">E</kbd> edit · <kbd className="kbd">U</kbd> undo · <kbd className="kbd">←</kbd>/<kbd className="kbd">→</kbd> move · <kbd className="kbd">Esc</kbd> exit
       </footer>
     </div>
   );

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { DEFAULT_SETTINGS } from './rules';
-import { DEFAULT_TEMPLATES, composeFor, formatRange, gmailComposeUrl, hasBlockers, meFrom, pickTemplate, render } from './template';
+import { DEFAULT_TEMPLATES, PRESEND_CHECKS, composeFor, formatRange, gmailComposeUrl, hasBlockers, meFrom, pickTemplate, render } from './template';
 
 const ctx = { name: 'Prof. Jane Doe', org: 'IIT Bombay', role: 'Associate Professor', message: 'Your RECAST idea maps onto my retrieval work.', extra: { 'Most Relevant Paper(s)': 'RECAST', Empty: '' } };
 
@@ -93,4 +93,13 @@ test('default email subject carries the window', () => {
 });
 test('meFrom builds me from settings', () => {
   expect(meFrom({ ...DEFAULT_SETTINGS, my_name: 'Alex Student', avail_from: '2026-12-01', avail_to: '2027-01-15' }).dates).toBe('Dec 1, 2026 – Jan 15, 2027');
+});
+
+test('pre-send checklist covers the four things professors look for', () => {
+  expect(PRESEND_CHECKS).toEqual([
+    'Cites a specific paper or project of theirs',
+    'Links one piece of my own work',
+    'States my exact dates',
+    'CV attached in Gmail (links cannot attach it)',
+  ]);
 });
