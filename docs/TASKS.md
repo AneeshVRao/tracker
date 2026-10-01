@@ -54,4 +54,4 @@ Spec: [specs/2026-09-29-outreach-tracker-design.md](specs/2026-09-29-outreach-tr
 
 - [x] Availability window in Settings as `{{my_dates}}`, used in the default subject and body
 - [x] Pre-send checklist gates copy on first emails (`X` in Session)
-- [ ] Lists imported before M5 keep their old templates; edit them on the list page to use `{{my_dates}}`
+- [x] Lists imported before M5 keep their old templates; edit them on the list page to use `{{my_dates}}` (Professors list updated)
