@@ -21,6 +21,8 @@ Spec: [specs/2026-09-29-outreach-tracker-design.md](specs/2026-09-29-outreach-tr
 ### Known follow-ups from M1 reviews
 
 - Below 1280px the contact panel stacks above the table (tab order differs from visual order).
+- `bulkForm` and `closeStaleForm` server actions still throw instead of returning `{ error }`.
+- Session: contacts passed with ←/→ are not revisited automatically.
 - `next/font` fetches Geist at build time.
 
 ## M2 Daily driver — [plan](plans/2026-09-30-m2-daily-driver.md)

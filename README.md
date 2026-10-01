@@ -9,7 +9,7 @@ any external service.
 
 ## Requirements
 
-- Node.js 22.5 or newer (the app uses the built-in `node:sqlite` module)
+- Node.js 22.13 or newer (the app uses the built-in `node:sqlite` module)
 
 ## Setup
 
@@ -39,10 +39,10 @@ Data lives in `data/tracker.db` (gitignored). Delete the file to start over.
 - **Contacts**: the full table with filters, a detail panel, the message composer, notes and undo.
 - **Deadlines**: upcoming application deadlines, including a reference list of formal programmes.
 - **Intros**: warm introduction paths between contacts.
-- **Stats**: which messages, angles and send times get replies.
-- **Lists**: one page per imported list, with export to Excel.
+- **Stats**: reply rates grouped by list, project, priority, degree, country or any sheet column.
+- **Lists**: every imported list with counts and an Export to Excel button; each list page edits its message templates and shows its column mapping.
 - **Import**: the workbook import wizard.
-- **Settings**: your identity, send window, limits and templates.
+- **Settings**: your identity, time zone, send window and limits.
 
 ## Documentation
 
