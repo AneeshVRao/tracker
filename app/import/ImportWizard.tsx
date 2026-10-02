@@ -1,5 +1,6 @@
 'use client';
 
+import { FileXlsIcon } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { previewWorkbook, runImport } from '@/app/actions';
@@ -55,8 +56,10 @@ export function ImportWizard() {
 
   return (
     <div className="space-y-4">
-      <label className="block cursor-pointer rounded-lg border border-dashed border-fg/25 bg-panel px-6 py-10 text-center text-muted hover:border-accent hover:text-fg focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30">
-        {file ? file.name : 'Drop an .xlsx here or click to choose'}
+      <label className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border border-dashed border-fg/25 bg-panel px-6 py-12 text-center text-muted shadow-(--shadow-card) hover:border-accent hover:text-fg focus-within:border-accent focus-within:ring-3 focus-within:ring-accent/15">
+        <span className="grid size-11 place-items-center rounded-full bg-accent-soft text-accent"><FileXlsIcon size={22} aria-hidden /></span>
+        <span className="font-medium text-fg">{file ? file.name : 'Choose an .xlsx workbook'}</span>
+        <span className="text-xs">{file ? (pending ? 'Reading tabs…' : 'Click to pick a different file') : 'Drop it here or click to browse. Each tab becomes a list.'}</span>
         <input type="file" accept=".xlsx" className="sr-only" onChange={e => pick(e.target.files?.[0] ?? null)} />
       </label>
       {pending && <p role="status" className="text-muted">Reading…</p>}

@@ -27,7 +27,7 @@ export default async function ListPage({ params }: { params: Promise<{ id: strin
           {TEMPLATE_FIELDS[list.channel].map(([k, label]) => (
             <label key={k} className="block space-y-1">
               <span className="label">{label}</span>
-              <textarea name={k} defaultValue={t[k] ?? ''} rows={k === 'subject' ? 1 : 9} className="input w-full font-mono text-[13px]" />
+              <textarea name={k} defaultValue={t[k] ?? ''} rows={k === 'subject' ? 1 : 9} className="input w-full text-[13.5px] leading-relaxed" />
             </label>
           ))}
           <button className="btn-primary">Save templates</button>

@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 /*
-  Research-desk world (after Winter Research Desk): ivory canvas, warm hairlines, one deep-teal accent
-  reserved for primary actions and the current item. EB Garamond only for page titles; Figtree runs the UI;
-  JetBrains Mono only for counts, dates and keys.
-  Shape rule: buttons and chips are pills, cards 12px, inputs 8px, keycaps 5px.
+  Sleek research desk (after Winter Research Desk): ivory canvas, warm hairlines, one deep-teal accent
+  reserved for primary actions and the current item. Figtree runs everything, titles included (tight
+  tracking, accent word in teal); JetBrains Mono only for counts, dates and keys.
+  Shape rule: buttons and chips are pills, cards 12px, inputs 8px, keycaps 5px. Controls are 32px tall.
 */
 @theme {
   --color-bg: #fffdf9;
@@ -16,17 +16,20 @@
   --color-line: #e6e3d2;
   --color-accent: #0f766e;
   --color-accent-soft: #e3f1ee;
+  --color-on-accent: #ffffff;
   --color-warn: #9a4a06;
   --color-bad: #b42318;
   --color-good: #166534;
   --radius-md: 8px;
   --radius-lg: 12px;
+  --shadow-control: 0 1px 2px rgb(40 35 15 / .06);
+  --shadow-card: 0 1px 2px rgb(40 35 15 / .04), 0 6px 20px -12px rgb(40 35 15 / .12);
+  --shadow-pop: 0 2px 6px rgb(40 35 15 / .06), 0 24px 60px -20px rgb(40 35 15 / .35);
 }
 
 @theme inline {
   --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-display: var(--font-garamond), Georgia, serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -41,44 +44,52 @@
     --color-line: #2e312a;
     --color-accent: #5fd3c3;
     --color-accent-soft: #17302c;
+    --color-on-accent: #0c1f1c;
     --color-warn: #f2b45c;
     --color-bad: #f2938a;
     --color-good: #74d39a;
+    --shadow-control: 0 1px 2px rgb(0 0 0 / .3);
+    --shadow-card: 0 1px 2px rgb(0 0 0 / .3), 0 6px 20px -12px rgb(0 0 0 / .5);
+    --shadow-pop: 0 2px 6px rgb(0 0 0 / .4), 0 24px 60px -20px rgb(0 0 0 / .7);
   }
 }
 
-body { background: var(--color-bg); color: var(--color-fg); font-size: 13.5px; line-height: 1.5; caret-color: var(--color-accent); }
-::selection { background: color-mix(in srgb, var(--color-accent) 22%, transparent); }
-:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-input[type="checkbox"], input[type="radio"] { accent-color: var(--color-accent); width: 14px; height: 14px; }
-select.input { padding-right: 1.25rem; }
-a { text-underline-offset: 3px; }
-.tabular-nums, td, .font-mono { font-variant-numeric: tabular-nums; }
-* { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--color-fg) 22%, transparent) transparent; }
-a, button { transition: color .15s cubic-bezier(.16,1,.3,1), background-color .15s cubic-bezier(.16,1,.3,1), border-color .15s, box-shadow .15s, transform .1s; }
-@media (prefers-reduced-motion: reduce) { a, button { transition: none; } }
+@layer base {
+  body { background: var(--color-bg); color: var(--color-fg); font-size: 13.5px; line-height: 1.5; caret-color: var(--color-accent); }
+  ::selection { background: color-mix(in srgb, var(--color-accent) 22%, transparent); }
+  :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+  input[type="checkbox"], input[type="radio"] { accent-color: var(--color-accent); width: 14px; height: 14px; }
+  select.input { padding-right: 1.25rem; }
+  a { text-underline-offset: 3px; }
+  .tabular-nums, td, .font-mono { font-variant-numeric: tabular-nums; }
+  * { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--color-fg) 22%, transparent) transparent; }
+  a, button { transition: color .15s cubic-bezier(.16,1,.3,1), background-color .15s cubic-bezier(.16,1,.3,1), border-color .15s, box-shadow .15s, transform .1s; }
+  @media (prefers-reduced-motion: reduce) { a, button { transition: none; } }
+}
+
+/* one authored moment: each page settles in when you navigate to it */
+@keyframes settle { from { opacity: 0; transform: translateY(6px); } }
+@media (prefers-reduced-motion: no-preference) { main > * { animation: settle .28s cubic-bezier(.16,1,.3,1) both; } }
 
 @layer components {
-  .input { @apply rounded-md border border-line bg-panel px-2.5 py-1 text-[13.5px] text-fg outline-none placeholder:text-muted hover:border-fg/25 focus:border-accent focus-visible:outline-none focus:ring-3 focus:ring-accent/15; }
-  .btn { @apply inline-flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-line bg-panel px-3.5 py-1 text-[13px] font-medium text-fg shadow-[0_1px_2px_rgb(60_50_20/0.06)] hover:border-fg/25 hover:bg-sunken active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40; }
-  .btn-primary { @apply inline-flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-transparent bg-accent px-3.5 py-1 text-[13px] font-semibold text-white shadow-[0_1px_2px_rgb(15_118_110/0.25)] hover:brightness-110 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40; }
+  .input { @apply h-8 rounded-md border border-line bg-panel px-2.5 text-[13.5px] text-fg outline-none placeholder:text-muted hover:border-fg/25 focus:border-accent focus-visible:outline-none focus:ring-3 focus:ring-accent/15; }
+  textarea.input { @apply h-auto py-2; }
+  .btn { @apply inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-line bg-panel px-3.5 text-[13px] font-medium text-fg shadow-(--shadow-control) hover:border-fg/25 hover:bg-sunken active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40; }
+  .btn-primary { @apply inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-transparent bg-accent px-4 text-[13px] font-semibold text-on-accent shadow-[inset_0_1px_0_rgb(255_255_255/0.18),0_1px_2px_rgb(15_118_110/0.3)] hover:brightness-110 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40; }
   .nav { @apply flex items-center gap-2.5 rounded-full border border-transparent px-3 py-1.5 text-[13.5px] text-fg/75 hover:bg-panel/70 hover:text-fg; }
-  .nav[aria-current="page"] { @apply border-line bg-panel font-semibold text-fg shadow-[0_1px_2px_rgb(60_50_20/0.06)]; }
+  .nav[aria-current="page"] { @apply border-line bg-panel font-semibold text-fg shadow-(--shadow-control); }
   .nav[aria-current="page"] svg { @apply text-accent; }
   .nav-count { @apply ml-auto font-mono text-[11px] text-muted; }
   .th { @apply px-3 py-2 text-xs font-medium text-muted; }
   .label { @apply text-xs font-medium text-muted; }
-  .page-title { @apply font-display text-[30px] leading-[1.15] font-medium tracking-[-0.01em] text-fg; }
-  .page-title em { @apply italic text-accent; }
-  .card { @apply rounded-lg border border-line bg-panel shadow-[0_1px_3px_rgb(60_50_20/0.05)]; }
-  .section-title { @apply font-display text-[19px] leading-tight font-medium; }
+  .page-title { @apply text-[26px] leading-[1.2] font-semibold tracking-[-0.025em] text-fg; }
+  .page-title em { @apply not-italic text-accent; }
+  .card { @apply rounded-lg border border-line bg-panel shadow-(--shadow-card); }
+  .section-title { @apply text-[14px] leading-tight font-semibold tracking-[-0.01em]; }
   .row { @apply flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 hover:bg-sunken; }
   .kbd { @apply inline-flex min-w-[1.3rem] items-center justify-center rounded-[5px] border border-line bg-panel px-1 font-mono text-[11px] leading-[1.45] text-muted shadow-[0_1px_0_var(--color-line)]; }
-  .btn-primary .kbd { @apply border-white/30 bg-white/15 text-white shadow-none; }
+  .btn-primary .kbd { @apply border-on-accent/30 bg-on-accent/15 text-on-accent shadow-none; }
   .notice-warn { @apply rounded-md border px-3 py-1.5 text-xs border-warn/30 bg-warn/8 text-warn; }
   .notice-bad { @apply rounded-md border px-3 py-1.5 text-xs border-bad/30 bg-bad/8 text-bad; }
   .notice-good { @apply rounded-md border px-3 py-1.5 text-xs border-good/30 bg-good/8 text-good; }
 }
-
-/* dark-mode primary buttons sit on a light teal; keep label contrast */
-@media (prefers-color-scheme: dark) { .btn-primary { color: #0c1f1c; } .btn-primary .kbd { border-color: rgb(12 31 28 / .35); background: rgb(12 31 28 / .12); color: #0c1f1c; } }

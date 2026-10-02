@@ -42,7 +42,7 @@ export function ContactPanel({ d, closeHref, settings, now }: { d: ContactDetail
     <div className="space-y-5 p-5 text-[13px]">
       <header className="space-y-1">
         <div className="flex items-start gap-2">
-          <h2 className="flex-1 font-display text-[23px] leading-tight font-medium">{c.name}</h2>
+          <h2 className="flex-1 text-[21px] leading-tight font-semibold tracking-[-0.02em]">{c.name}</h2>
           <Link href={closeHref} scroll={false} className="-mr-1 grid size-7 place-items-center rounded-full text-muted hover:bg-sunken hover:text-fg" aria-label="Close panel"><XIcon size={16} aria-hidden /></Link>
         </div>
         <p className="text-muted">{[c.role, c.org, c.country].filter(Boolean).join(' · ')}</p>

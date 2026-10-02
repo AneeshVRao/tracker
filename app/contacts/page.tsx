@@ -34,7 +34,8 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
   return (
     <div className="flex min-h-screen flex-col xl:h-screen xl:flex-row">
       <section className="flex min-w-0 flex-1 flex-col xl:min-h-0">
-        <form action="/contacts" className="flex flex-wrap items-center gap-1.5 border-b border-line bg-panel px-3 py-2.5">
+        <form action="/contacts" className="flex flex-wrap items-center gap-1.5 border-b border-line bg-panel px-4 py-3">
+          <h1 className="mr-3 text-[18px] font-semibold tracking-[-0.02em]">Contacts <span className="ml-1 font-mono text-xs font-normal text-muted">{total.toLocaleString('en-IN')}</span></h1>
           <input name="q" aria-label="Search" defaultValue={sp.q} placeholder="Search name, org, role, message" className="input w-64" />
           <select name="list" aria-label="List" defaultValue={sp.list ?? ''} className="input"><option value="">All lists</option>{lists.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}</select>
           <select name="status" aria-label="Status" defaultValue={sp.status ?? ''} className="input">
@@ -49,7 +50,6 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
           <select name="sort" aria-label="Sort" defaultValue={sp.sort ?? ''} className="input"><option value="">Sheet order</option><option value="priority">Priority</option><option value="name">Name</option><option value="follow">Follow-up date</option><option value="touched">Last touched</option></select>
           <button className="btn">Apply</button>
           <Link href="/contacts" className="rounded px-1.5 py-1 text-muted hover:text-fg">Reset</Link>
-          <span className="ml-auto text-xs tabular-nums text-muted">{total} contacts</span>
         </form>
 
         <form action={bulkForm} className="flex min-h-0 flex-1 flex-col">
@@ -76,7 +76,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
                     <td className="max-w-56 truncate pr-3">{c.org}</td>
                     <td className="pr-3 text-muted">{listName.get(c.list_id)}</td>
                     <td className="pr-3"><StatusChip s={c.status} /></td>
-                    <td className="pr-3 text-muted">{['', 'L', 'M', 'H'][c.priority]}</td>
+                    <td className="pr-3">{c.priority === 3 ? <span className="rounded-full bg-accent-soft px-2 py-px text-xs font-medium text-accent">High</span> : <span className="text-xs text-muted">{['', 'Low', 'Med'][c.priority]}</span>}</td>
                     <td className="pr-3 tabular-nums text-muted">{c.follow_up_on ?? ''}</td>
                   </tr>
                 ))}

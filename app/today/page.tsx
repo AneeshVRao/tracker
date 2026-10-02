@@ -114,7 +114,7 @@ function Stat({ label, value, note, tone = '' }: { label: string; value: string 
   return (
     <div className="card px-4 py-3">
       <div className="label">{label}</div>
-      <div className={`mt-1 font-display text-[30px] leading-none tabular-nums ${tone || (value === 0 ? 'text-muted' : '')}`}>{value}</div>
+      <div className={`mt-1.5 text-[28px] leading-none font-semibold tracking-[-0.03em] tabular-nums ${tone || (value === 0 ? 'text-muted' : '')}`}>{value}</div>
       <div className="mt-1.5 text-xs text-muted">{note}</div>
     </div>
   );

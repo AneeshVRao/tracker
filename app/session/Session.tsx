@@ -147,7 +147,7 @@ export function Session({ ids, n, initialItems, total, deferred, orgsToday, comp
         <article className="card space-y-4 p-6">
           <header className="space-y-1">
             <div className="flex flex-wrap items-baseline gap-2">
-              <h1 className="font-display text-[26px] leading-tight font-medium">{item.name}</h1>
+              <h1 className="text-[24px] leading-tight font-semibold tracking-[-0.025em]">{item.name}</h1>
               {done[item.id] && <span className="rounded-full border border-good/30 bg-good/10 px-2 py-px text-xs font-medium text-good">{done[item.id] === 'sent' ? 'Sent' : 'Skipped'}</span>}
             </div>
             <p className="text-[14px] text-fg/80">{[item.role, item.org].filter(Boolean).join(' · ')}</p>
