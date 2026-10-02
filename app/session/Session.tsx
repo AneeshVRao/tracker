@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { actContact, undoContact } from '@/app/actions';
+import { ArrowLeftIcon, ArrowRightIcon } from '@phosphor-icons/react';
 import { Composer } from '@/app/contacts/Composer';
 import { norm, type EmailConfidence } from '@/lib/parse';
 
@@ -143,10 +144,10 @@ export function Session({ ids, n, initialItems, total, deferred, orgsToday, comp
           </div>
         </div>
       ) : (
-        <article className="card space-y-4 border-accent/40 p-6 shadow-sm ring-1 ring-accent/15">
+        <article className="card space-y-4 p-6">
           <header className="space-y-1">
             <div className="flex flex-wrap items-baseline gap-2">
-              <h1 className="text-xl font-semibold tracking-tight">{item.name}</h1>
+              <h1 className="font-display text-[26px] leading-tight font-medium">{item.name}</h1>
               {done[item.id] && <span className="rounded-full border border-good/30 bg-good/10 px-2 py-px text-xs font-medium text-good">{done[item.id] === 'sent' ? 'Sent' : 'Skipped'}</span>}
             </div>
             <p className="text-[14px] text-fg/80">{[item.role, item.org].filter(Boolean).join(' · ')}</p>
@@ -177,8 +178,8 @@ export function Session({ ids, n, initialItems, total, deferred, orgsToday, comp
             <button className="btn" disabled={pending || !!done[item.id]} onClick={() => act('skip')}>Skip <kbd className="kbd">K</kbd></button>
             <button className="btn" disabled={pending} onClick={undo}>Undo <kbd className="kbd">U</kbd></button>
             <span className="ml-auto flex gap-1.5">
-              <button className="btn" aria-label="Previous contact" disabled={i === 0} onClick={() => move(-1)}>←</button>
-              <button className="btn" aria-label="Next contact" onClick={() => move(1)}>→</button>
+              <button className="btn" aria-label="Previous contact" disabled={i === 0} onClick={() => move(-1)}><ArrowLeftIcon size={15} aria-hidden /></button>
+              <button className="btn" aria-label="Next contact" onClick={() => move(1)}><ArrowRightIcon size={15} aria-hidden /></button>
             </span>
           </div>
 
@@ -192,8 +193,8 @@ export function Session({ ids, n, initialItems, total, deferred, orgsToday, comp
         </article>
       )}
 
-      <footer className="sticky bottom-0 -mx-6 mt-auto flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-t border-line bg-bg/90 px-6 py-2.5 text-xs text-muted backdrop-blur">
-        <kbd className="kbd">C</kbd> copy · <kbd className="kbd">O</kbd> open · <kbd className="kbd">X</kbd> checklist · <kbd className="kbd">S</kbd> sent · <kbd className="kbd">K</kbd> skip · <kbd className="kbd">E</kbd> edit · <kbd className="kbd">U</kbd> undo · <kbd className="kbd">←</kbd>/<kbd className="kbd">→</kbd> move · <kbd className="kbd">Esc</kbd> exit
+      <footer className="sticky bottom-0 -mx-6 mt-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-1 border-t border-line bg-bg px-6 py-2.5 text-xs text-muted [&>span]:inline-flex [&>span]:items-center [&>span]:gap-1">
+        <span><kbd className="kbd">C</kbd> copy</span><span><kbd className="kbd">O</kbd> open</span><span><kbd className="kbd">X</kbd> checklist</span><span><kbd className="kbd">S</kbd> sent</span><span><kbd className="kbd">K</kbd> skip</span><span><kbd className="kbd">E</kbd> edit</span><span><kbd className="kbd">U</kbd> undo</span><span><kbd className="kbd">←</kbd><kbd className="kbd">→</kbd> move</span><span><kbd className="kbd">Esc</kbd> exit</span>
       </footer>
     </div>
   );

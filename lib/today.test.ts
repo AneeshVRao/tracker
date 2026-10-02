@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { openDb, type Contact, type DB } from './db';
 import { DEFAULT_SETTINGS as cfg } from './rules';
-import { activityStats, buildQueue, dueFollowUps, orgsSentToday, repliesWaiting, upcomingDeadlines } from './today';
+import { activityStats, buildQueue, dueFollowUps, orgsSentToday, repliesWaiting, upcomingDeadlines, navCounts } from './today';
 
 const now = new Date('2026-09-29T06:00:00Z'); // 11:30 in Asia/Kolkata → today 2026-09-29
 let n = 0;
@@ -119,5 +119,15 @@ describe('duplicates in queue', () => {
     const q = buildQueue(db, [2], now, cfg);
     expect(q.items.find(i => i.id === a)!.dup_list).toBe('Profs');
     expect(q.items.find(i => i.id === b)!.dup_list).toBeNull();
+  });
+});
+
+describe('navCounts', () => {
+  test('counts the unsent queue, all non-reference contacts and lists', () => {
+    const db = seed();
+    contact(db, { list_id: 1, name: 'A' });
+    contact(db, { list_id: 1, name: 'B', status: 'sent' });
+    contact(db, { list_id: 2, name: 'C', status: 'reference' });
+    expect(navCounts(db, '2026-09-29')).toMatchObject({ queue: 1, contacts: 2, lists: 2, deadlines: 0 });
   });
 });

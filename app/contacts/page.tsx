@@ -1,3 +1,4 @@
+import { ArrowLeftIcon, ArrowRightIcon } from '@phosphor-icons/react/ssr';
 import Link from 'next/link';
 import { bulkForm } from '@/app/actions';
 import { Empty, StatusChip } from '@/app/ui';
@@ -85,9 +86,9 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
           </div>
           {pages > 1 && (
             <div className="flex items-center gap-3 border-t border-line bg-panel px-3 py-2 text-xs text-muted [&_a]:rounded [&_a]:px-1 [&_a]:text-fg [&_a]:hover:text-accent">
-              {f.page! > 1 && <Link href={href({ page: f.page! - 1 })}>← Prev</Link>}
+              {f.page! > 1 && <Link href={href({ page: f.page! - 1 })} className="inline-flex items-center gap-1"><ArrowLeftIcon size={13} aria-hidden />Prev</Link>}
               <span>Page {f.page} of {pages}</span>
-              {f.page! < pages && <Link href={href({ page: f.page! + 1 })}>Next →</Link>}
+              {f.page! < pages && <Link href={href({ page: f.page! + 1 })} className="inline-flex items-center gap-1">Next<ArrowRightIcon size={13} aria-hidden /></Link>}
             </div>
           )}
         </form>

@@ -1,3 +1,4 @@
+import { XIcon } from '@phosphor-icons/react/ssr';
 import Link from 'next/link';
 import { StatusChip } from '@/app/ui';
 import type { ContactDetail } from '@/lib/queries';
@@ -41,8 +42,8 @@ export function ContactPanel({ d, closeHref, settings, now }: { d: ContactDetail
     <div className="space-y-5 p-5 text-[13px]">
       <header className="space-y-1">
         <div className="flex items-start gap-2">
-          <h2 className="flex-1 text-base font-semibold tracking-tight">{c.name}</h2>
-          <Link href={closeHref} scroll={false} className="-mr-1 rounded px-1.5 py-0.5 text-muted hover:bg-sunken hover:text-fg" aria-label="Close panel">✕</Link>
+          <h2 className="flex-1 font-display text-[23px] leading-tight font-medium">{c.name}</h2>
+          <Link href={closeHref} scroll={false} className="-mr-1 grid size-7 place-items-center rounded-full text-muted hover:bg-sunken hover:text-fg" aria-label="Close panel"><XIcon size={16} aria-hidden /></Link>
         </div>
         <p className="text-muted">{[c.role, c.org, c.country].filter(Boolean).join(' · ')}</p>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-1 text-xs">

@@ -1,30 +1,31 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
-import Link from 'next/link';
+import { EB_Garamond, Figtree, JetBrains_Mono } from 'next/font/google';
+import { getDb } from '@/lib/db';
+import { getSettings } from '@/lib/queries';
+import { todayIn } from '@/lib/rules';
+import { formatRange } from '@/lib/template';
+import { navCounts } from '@/lib/today';
+import { Sidebar } from './Sidebar';
 import './globals.css';
 
-const sans = Geist({ subsets: ['latin'], variable: '--font-geist-sans' });
-const mono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono' });
+const sans = Figtree({ subsets: ['latin'], variable: '--font-figtree' });
+const mono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains' });
+const display = EB_Garamond({ subsets: ['latin'], style: ['normal', 'italic'], weight: ['400', '500'], variable: '--font-garamond' });
 
 export const dynamic = 'force-dynamic'; // every page reads the live DB
 export const metadata: Metadata = { title: 'Outreach Tracker' };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const db = getDb();
+  const s = getSettings(db);
+  const counts = navCounts(db, todayIn(s.my_timezone, new Date()));
+  // "Apr 20 to Jul 20, 2027" when both dates share a year
+  const [from, to] = formatRange(s.avail_from, s.avail_to).split(' – ');
+  const dates = !to ? '' : from.slice(-4) === to.slice(-4) ? `${from.slice(0, -6)} to ${to}` : `${from} to ${to}`;
   return (
-    <html lang="en" className={`${sans.variable} ${mono.variable}`}>
+    <html lang="en" className={`${sans.variable} ${mono.variable} ${display.variable}`}>
       <body className="flex min-h-screen font-sans antialiased">
-        <nav className="sticky top-0 flex h-screen w-40 shrink-0 flex-col gap-0.5 border-r border-line bg-panel p-3">
-          <span className="mb-4 px-2 text-[13px] font-semibold tracking-tight">Outreach</span>
-          <Link href="/today" className="nav">Today</Link>
-          <Link href="/session" className="nav">Session</Link>
-          <Link href="/contacts" className="nav">Contacts</Link>
-          <Link href="/deadlines" className="nav">Deadlines</Link>
-          <Link href="/intros" className="nav">Intros</Link>
-          <Link href="/stats" className="nav">Stats</Link>
-          <Link href="/lists" className="nav">Lists</Link>
-          <Link href="/import" className="nav">Import</Link>
-          <Link href="/settings" className="nav">Settings</Link>
-        </nav>
+        <Sidebar counts={counts} name={s.my_name} dates={dates} />
         <main className="min-w-0 flex-1">{children}</main>
       </body>
     </html>

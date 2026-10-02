@@ -21,7 +21,7 @@ export default async function SessionPage({ searchParams }: { searchParams: Prom
 
   if (!ids.length) return (
     <div className="mx-auto max-w-2xl space-y-4 p-6">
-      <h1 className="page-title">Start a session</h1>
+      <h1 className="page-title">Start a <em>session</em></h1>
       <p className="text-muted">Pick the lists to work through. Contacts are ordered by upcoming deadline, then priority. People at an organisation you already contacted today are held back.</p>
       <form action="/session" className="card space-y-3 p-4">
         <fieldset className="space-y-2">

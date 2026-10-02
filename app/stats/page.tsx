@@ -18,7 +18,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
   return (
     <div className="mx-auto max-w-5xl space-y-4 p-6">
       <header className="flex flex-wrap items-end gap-3">
-        <h1 className="page-title mr-auto">What gets replies</h1>
+        <h1 className="page-title mr-auto">What gets <em>replies</em></h1>
         <form action="/stats" className="flex items-center gap-1.5">
           <select name="dim" defaultValue={dim} className="input" aria-label="Group by">
             {DIMS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}

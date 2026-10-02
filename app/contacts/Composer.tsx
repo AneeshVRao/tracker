@@ -37,13 +37,13 @@ export function Composer(p: Props) {
   };
 
   return (
-    <div className="space-y-2 rounded-lg border border-line bg-sunken/50 p-3">
+    <div className="space-y-2 rounded-lg bg-sunken/70 p-3">
       {p.channel === 'email' && !p.to && <p className="text-xs text-bad">No email address in the sheet.</p>}
       {p.channel === 'email' && p.confidence === 'inferred' && <p className="text-xs text-warn">Inferred email ({p.to}). Verify it before sending.</p>}
       {p.channel === 'linkedin' && !p.linkedinUrl && <p className="text-xs text-bad">No LinkedIn URL in the sheet.</p>}
       {p.subject && <p><span className="label mr-1">Subject</span>{' '}{p.subject}</p>}
       <textarea data-cmd="edit" value={text} onChange={e => setText(e.target.value)} rows={p.channel === 'email' ? 14 : 6}
-        className="input w-full font-mono text-[12.5px] leading-relaxed" aria-label="Message" />
+        className="input w-full px-3.5 py-3 text-[14px] leading-[1.65]" aria-label="Message" />
       {gated && (
         <fieldset className="space-y-1 text-xs">
           <legend className="label">Before you send</legend>

@@ -86,3 +86,15 @@ export function buildQueue(db: DB, listIds: number[], now: Date, cfg: Settings):
     || eff(b) - eff(a) || a.list_id - b.list_id || a.source_row - b.source_row);
   return { items, deferred };
 }
+
+/** Sidebar badges: things waiting today, the unsent queue, and table sizes. */
+export function navCounts(db: DB, today: string) {
+  const n = (sql: string) => (db.prepare(sql).get() as { n: number }).n;
+  return {
+    today: dueFollowUps(db, today).length + repliesWaiting(db).length,
+    queue: n("SELECT COUNT(*) AS n FROM contacts WHERE status = 'to_contact'"),
+    contacts: n("SELECT COUNT(*) AS n FROM contacts WHERE status <> 'reference'"),
+    deadlines: upcomingDeadlines(db, today).length,
+    lists: n('SELECT COUNT(*) AS n FROM lists'),
+  };
+}

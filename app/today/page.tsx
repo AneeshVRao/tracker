@@ -31,16 +31,29 @@ export default function TodayPage() {
   const nextUp = lists.map(l => ({ l, ...buildQueue(db, [l.id], now, cfg) }));
   const pct = stats.cap > 0 ? stats.invitesWeek / stats.cap : 0;
   const open = (id: number) => `/contacts?open=${id}`;
+  const ready = nextUp.reduce((n, x) => n + x.items.length, 0);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-6">
-      <header className="flex flex-wrap items-end gap-x-8 gap-y-3">
-        <h1 className="page-title mr-auto">Today <span className="font-normal text-muted">{today}</span></h1>
-        <Stat label="LinkedIn invites this week" value={`${stats.invitesWeek}/${stats.cap}`} tone={pct >= 1 ? 'text-bad' : pct >= 0.8 ? 'text-warn' : ''} />
-        <Stat label="Sent today" value={stats.sentToday} />
-        <Stat label="Replies this week" value={stats.repliesWeek} />
-        <Link href="/session" className="btn-primary">Start session</Link>
+    <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 md:px-8 md:py-7">
+      <header className="card grid items-end gap-5 bg-sunken/70 px-5 py-5 md:grid-cols-[1fr_auto] md:px-7 md:py-6">
+        <div>
+          <h1 className="page-title">Today, <em>{new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'short', day: 'numeric', timeZone: 'UTC' }).format(new Date(today))}</em></h1>
+          <p className="mt-2 max-w-[60ch] text-[14px] text-muted">
+            {ready.toLocaleString('en-IN')} people ready across {nextUp.length} lists. {due.length ? `${due.length} follow-ups due.` : 'No follow-ups due.'}{replies.length ? ` ${replies.length} replies waiting.` : ''}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Link href="/contacts" className="btn">Browse contacts</Link>
+          <Link href="/session" className="btn-primary">Start session</Link>
+        </div>
       </header>
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Stat label="Sent today" value={stats.sentToday} note="email and LinkedIn" />
+        <Stat label="LinkedIn invites" value={`${stats.invitesWeek}/${stats.cap}`} note="rolling 7 days" tone={pct >= 1 ? 'text-bad' : pct >= 0.8 ? 'text-warn' : ''} />
+        <Stat label="Replies this week" value={stats.repliesWeek} note="across all lists" />
+        <Stat label="Follow-ups due" value={due.length} note={due.length ? 'listed below' : 'nothing waiting'} />
+      </div>
 
       {deadlines.length > 0 && (
         <Section title={`Deadlines in the next 21 days (${deadlines.length})`}>
@@ -85,21 +98,26 @@ export default function TodayPage() {
       <Section title="Next up">
         {nextUp.map(({ l, items, deferred }) => (
           <div key={l.id} className="row py-3">
-            <span className="w-48 font-medium">{l.name}</span>
-            <span className="text-xs text-muted">{items.length} ready{deferred ? ` · ${deferred} waiting (company spacing)` : ''}</span>
-            <span className="min-w-0 flex-1 truncate text-xs text-muted">{items.slice(0, 10).map(i => i.name).join(', ')}</span>
-            {items.length > 0 && <Link href={`/session?lists=${l.id}`} className="btn">Session</Link>}
+            <span className="min-w-0 flex-1 truncate font-medium md:w-56 md:flex-none">{l.name}</span>
+            <span className="text-xs text-muted md:w-24"><span className="font-mono text-fg">{items.length}</span> ready{deferred ? ` · ${deferred} waiting (company spacing)` : ''}</span>
+            <span className="order-last min-w-0 basis-full truncate text-xs text-muted md:order-none md:basis-0 md:flex-1">{items.slice(0, 10).map(i => i.name).join(', ')}</span>
+            {items.length > 0 && <Link href={`/session?lists=${l.id}`} className="btn md:ml-auto">Session</Link>}
           </div>
         ))}
       </Section>
 
-      {!deadlines.length && !due.length && !replies.length && <p className="card px-4 py-6 text-center text-muted">No follow-ups due. Start a session to send new messages.</p>}
     </div>
   );
 }
 
-function Stat({ label, value, tone = '' }: { label: string; value: string | number; tone?: string }) {
-  return <div className="rounded-md bg-sunken px-3 py-1.5"><div className="label">{label}</div><div className={`text-lg font-semibold leading-tight tabular-nums ${tone}`}>{value}</div></div>;
+function Stat({ label, value, note, tone = '' }: { label: string; value: string | number; note: string; tone?: string }) {
+  return (
+    <div className="card px-4 py-3">
+      <div className="label">{label}</div>
+      <div className={`mt-1 font-display text-[30px] leading-none tabular-nums ${tone || (value === 0 ? 'text-muted' : '')}`}>{value}</div>
+      <div className="mt-1.5 text-xs text-muted">{note}</div>
+    </div>
+  );
 }
 
 function Section({ title, extra, children }: { title: string; extra?: React.ReactNode; children: React.ReactNode }) {

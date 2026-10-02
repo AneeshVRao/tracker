@@ -1,67 +1,84 @@
 @import "tailwindcss";
 
-/* Neutral zinc-leaning palette, one accent (blue). Light + dark share the same token names. */
+/*
+  Research-desk world (after Winter Research Desk): ivory canvas, warm hairlines, one deep-teal accent
+  reserved for primary actions and the current item. EB Garamond only for page titles; Figtree runs the UI;
+  JetBrains Mono only for counts, dates and keys.
+  Shape rule: buttons and chips are pills, cards 12px, inputs 8px, keycaps 5px.
+*/
 @theme {
-  --color-bg: #fafafa;
+  --color-bg: #fffdf9;
   --color-panel: #ffffff;
-  --color-sunken: #f4f4f5;
-  --color-fg: #18181b;
-  --color-muted: #63636b;
-  --color-line: #e4e4e7;
-  --color-accent: #2f5bd3;
-  --color-warn: #8f5206;
+  --color-sunken: #faf7ee;
+  --color-side: #f7f4ea;
+  --color-fg: #1c1b17;
+  --color-muted: #66645b;
+  --color-line: #e6e3d2;
+  --color-accent: #0f766e;
+  --color-accent-soft: #e3f1ee;
+  --color-warn: #9a4a06;
   --color-bad: #b42318;
-  --color-good: #16794c;
-  --radius-md: 6px;
-  --radius-lg: 8px;
+  --color-good: #166534;
+  --radius-md: 8px;
+  --radius-lg: 12px;
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: var(--font-garamond), Georgia, serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
-    --color-bg: #0f0f11;
-    --color-panel: #17171a;
-    --color-sunken: #1c1c20;
-    --color-fg: #ececef;
-    --color-muted: #9b9ba4;
-    --color-line: #2a2a2f;
-    --color-accent: #8aa6f8;
-    --color-warn: #f0b24a;
-    --color-bad: #f28b82;
-    --color-good: #5fcf8f;
+    --color-bg: #121411;
+    --color-panel: #191b17;
+    --color-sunken: #1f221d;
+    --color-side: #161814;
+    --color-fg: #ecebe2;
+    --color-muted: #a6a59a;
+    --color-line: #2e312a;
+    --color-accent: #5fd3c3;
+    --color-accent-soft: #17302c;
+    --color-warn: #f2b45c;
+    --color-bad: #f2938a;
+    --color-good: #74d39a;
   }
 }
 
-body { background: var(--color-bg); color: var(--color-fg); font-size: 13px; line-height: 1.45; letter-spacing: -0.003em; }
-::selection { background: color-mix(in srgb, var(--color-accent) 25%, transparent); }
+body { background: var(--color-bg); color: var(--color-fg); font-size: 13.5px; line-height: 1.5; caret-color: var(--color-accent); }
+::selection { background: color-mix(in srgb, var(--color-accent) 22%, transparent); }
 :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-input[type="checkbox"] { accent-color: var(--color-accent); width: 14px; height: 14px; }
+input[type="checkbox"], input[type="radio"] { accent-color: var(--color-accent); width: 14px; height: 14px; }
 select.input { padding-right: 1.25rem; }
-a, button { transition: color .12s, background-color .12s, border-color .12s, opacity .12s; }
+a { text-underline-offset: 3px; }
+.tabular-nums, td, .font-mono { font-variant-numeric: tabular-nums; }
+* { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--color-fg) 22%, transparent) transparent; }
+a, button { transition: color .15s cubic-bezier(.16,1,.3,1), background-color .15s cubic-bezier(.16,1,.3,1), border-color .15s, box-shadow .15s, transform .1s; }
 @media (prefers-reduced-motion: reduce) { a, button { transition: none; } }
 
 @layer components {
-  .input { @apply rounded-md border border-line bg-panel px-2 py-1 text-[13px] text-fg shadow-xs outline-none placeholder:text-muted hover:border-fg/25 focus:border-accent focus-visible:outline-none focus:ring-2 focus:ring-accent/25; }
-  .btn { @apply inline-flex cursor-pointer items-center justify-center gap-1 whitespace-nowrap rounded-md border border-line bg-panel px-2.5 py-1 text-[13px] font-medium shadow-xs hover:border-fg/30 hover:bg-sunken active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40; }
-  .btn-primary { @apply inline-flex cursor-pointer items-center justify-center gap-1 whitespace-nowrap rounded-md border border-transparent bg-accent px-2.5 py-1 text-[13px] font-medium text-white shadow-xs hover:brightness-110 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40; }
-  .nav { @apply rounded-md px-2 py-1 text-muted hover:bg-line/60 hover:text-fg; }
-  .th { @apply px-3 py-1.5 text-xs font-medium text-muted; }
+  .input { @apply rounded-md border border-line bg-panel px-2.5 py-1 text-[13.5px] text-fg outline-none placeholder:text-muted hover:border-fg/25 focus:border-accent focus-visible:outline-none focus:ring-3 focus:ring-accent/15; }
+  .btn { @apply inline-flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-line bg-panel px-3.5 py-1 text-[13px] font-medium text-fg shadow-[0_1px_2px_rgb(60_50_20/0.06)] hover:border-fg/25 hover:bg-sunken active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40; }
+  .btn-primary { @apply inline-flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-transparent bg-accent px-3.5 py-1 text-[13px] font-semibold text-white shadow-[0_1px_2px_rgb(15_118_110/0.25)] hover:brightness-110 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40; }
+  .nav { @apply flex items-center gap-2.5 rounded-full border border-transparent px-3 py-1.5 text-[13.5px] text-fg/75 hover:bg-panel/70 hover:text-fg; }
+  .nav[aria-current="page"] { @apply border-line bg-panel font-semibold text-fg shadow-[0_1px_2px_rgb(60_50_20/0.06)]; }
+  .nav[aria-current="page"] svg { @apply text-accent; }
+  .nav-count { @apply ml-auto font-mono text-[11px] text-muted; }
+  .th { @apply px-3 py-2 text-xs font-medium text-muted; }
   .label { @apply text-xs font-medium text-muted; }
-  .page-title { @apply text-lg font-semibold tracking-tight; }
-  .card { @apply rounded-lg border border-line bg-panel; }
-  .section-title { @apply text-[13px] font-semibold tracking-tight; }
-  .row { @apply flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 hover:bg-sunken/60; }
-  .kbd { @apply inline-flex min-w-[1.25rem] items-center justify-center rounded border border-line bg-sunken px-1 font-mono text-[11px] leading-[1.35] text-muted shadow-[0_1px_0_var(--color-line)]; }
+  .page-title { @apply font-display text-[30px] leading-[1.15] font-medium tracking-[-0.01em] text-fg; }
+  .page-title em { @apply italic text-accent; }
+  .card { @apply rounded-lg border border-line bg-panel shadow-[0_1px_3px_rgb(60_50_20/0.05)]; }
+  .section-title { @apply font-display text-[19px] leading-tight font-medium; }
+  .row { @apply flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 hover:bg-sunken; }
+  .kbd { @apply inline-flex min-w-[1.3rem] items-center justify-center rounded-[5px] border border-line bg-panel px-1 font-mono text-[11px] leading-[1.45] text-muted shadow-[0_1px_0_var(--color-line)]; }
   .btn-primary .kbd { @apply border-white/30 bg-white/15 text-white shadow-none; }
-  .notice-warn { @apply rounded-md border px-2.5 py-1.5 text-xs border-warn/40 bg-warn/10 text-warn; }
-  .notice-bad { @apply rounded-md border px-2.5 py-1.5 text-xs border-bad/40 bg-bad/10 text-bad; }
-  .notice-good { @apply rounded-md border px-2.5 py-1.5 text-xs border-good/40 bg-good/10 text-good; }
+  .notice-warn { @apply rounded-md border px-3 py-1.5 text-xs border-warn/30 bg-warn/8 text-warn; }
+  .notice-bad { @apply rounded-md border px-3 py-1.5 text-xs border-bad/30 bg-bad/8 text-bad; }
+  .notice-good { @apply rounded-md border px-3 py-1.5 text-xs border-good/30 bg-good/8 text-good; }
 }
 
-/* dark-mode primary buttons use a light accent; keep label contrast */
-@media (prefers-color-scheme: dark) { .btn-primary { color: #0f0f11; } .btn-primary .kbd { border-color: rgb(15 15 17 / .35); background: rgb(15 15 17 / .12); color: #0f0f11; } }
+/* dark-mode primary buttons sit on a light teal; keep label contrast */
+@media (prefers-color-scheme: dark) { .btn-primary { color: #0c1f1c; } .btn-primary .kbd { border-color: rgb(12 31 28 / .35); background: rgb(12 31 28 / .12); color: #0c1f1c; } }
