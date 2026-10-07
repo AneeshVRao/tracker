@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { detectProject, mapStatus, nameOrgKey, normLinkedIn, parseDeadlines, parseDegree, parseEmail, parsePriority, personKey } from './parse';
+import { detectProject, mapStatus, dupKey, nameOrgKey, normLinkedIn, parseDeadlines, parseDegree, parseEmail, parsePriority, personKey } from './parse';
 
 describe('parseEmail', () => {
   test('verified', () => expect(parseEmail('jdoe@cs.example.edu (VERIFIED - listed on the faculty page)')).toEqual({ email: 'jdoe@cs.example.edu', confidence: 'verified' }));
@@ -39,7 +39,7 @@ describe('parseDegree', () => {
 describe('parseDeadlines', () => {
   test.each<[string, string[]]>([
     ['SRFP: Nov 30, 2026', ['2026-11-30']],
-    ["Academies' SRFP 2027: 30 Nov 2026; IIT Delhi SRFP 2027: not announced (2026 window was 16 Mar - 3 Apr 2026)", ['2026-04-03', '2026-11-30']],
+    ["Academies' SRFP 2027: 30 Nov 2026; Other College SRFP 2027: not announced (2026 window was 16 Mar - 3 Apr 2026)", ['2026-04-03', '2026-11-30']],
     ['SRFP 2027: 30 November 2026 (per programmes.json / IAS announcement); otherwise cold email', ['2026-11-30']],
     ['IITB: Sep 23, 2026 (window Aug 23-Sep 23)', ['2026-09-23']],
     ['SFP 2027: not yet announced (2026 cycle closed Mar 2 2026; expect ~Feb 2027); SRFP 2027: Nov 30 2026', ['2026-03-02', '2026-11-30']],
@@ -80,4 +80,12 @@ describe('parse robustness', () => {
   test('the word "may" is not a yearless month', () => expect(parseDeadlines('This may 3 be delayed; decision in 2027')).toEqual([]));
   test('full May dates still parse', () => expect(parseDeadlines('Closes May 15, 2027')).toEqual(['2027-05-15']));
   test('mutual stops at a line break', () => expect(parseDegree('2nd - mutual: Priya Example\nsee notes')).toEqual({ degree: '2nd', mutual: 'Priya Example' }));
+});
+
+describe('dupKey', () => {
+  test('ignores honorifics, case and spacing but keeps the organisation', () => {
+    expect(dupKey('Prof. Meera  Iyer', 'Sample University')).toBe(dupKey('meera iyer', 'sample university'));
+    expect(dupKey('Prof. Dr. Kiran Vale', 'Example Institute')).toBe(dupKey('Kiran Vale', 'Example Institute'));
+    expect(dupKey('Meera Iyer', 'Sample University')).not.toBe(dupKey('Meera Iyer', 'Other College'));
+  });
 });

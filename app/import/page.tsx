@@ -9,3 +9,5 @@ export default function ImportPage() {
     </div>
   );
 }
+
+export const metadata = { title: 'Import' };

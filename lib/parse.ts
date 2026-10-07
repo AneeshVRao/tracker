@@ -94,5 +94,9 @@ export function detectProject(message: string | null, projects: string[]): strin
 
 export const nameOrgKey = (name: string, org: string | null) => `${norm(name)}|${norm(org)}`;
 
+/** Looser identity for spotting the same person across lists: name without honorific + organisation. No org, no match. */
+export const dupKey = (name: string, org: string | null) =>
+  norm(org) ? nameOrgKey(name.trim().replace(/^((prof(essor)?|dr|mr|ms|mrs)\.?\s+)+/i, ''), org) : null;
+
 export const personKey = (c: { linkedin_url: string | null; email: string | null; name: string; org: string | null }) =>
   c.linkedin_url ?? c.email ?? nameOrgKey(c.name, c.org);

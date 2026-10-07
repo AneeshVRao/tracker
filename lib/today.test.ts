@@ -120,6 +120,12 @@ describe('duplicates in queue', () => {
     expect(q.items.find(i => i.id === a)!.dup_list).toBe('Profs');
     expect(q.items.find(i => i.id === b)!.dup_list).toBeNull();
   });
+  test('dup_list also catches the same name at the same org under a different key', () => {
+    const db = seed();
+    const a = contact(db, { list_id: 2, name: 'Meera Rao', org: 'IIT Z', person_key: 'p@iitz.ac.in' });
+    contact(db, { list_id: 1, name: 'Prof. Meera  Rao', org: 'iit z', person_key: 'p.typo@iitz.ac.in', status: 'sent' });
+    expect(buildQueue(db, [2], now, cfg).items.find(i => i.id === a)!.dup_list).toBe('Profs');
+  });
 });
 
 describe('navCounts', () => {

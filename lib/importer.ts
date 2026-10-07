@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { tx, type Contact, type DB, type List } from './db';
 import { guessChannel, guessExclude, guessInclude, guessKind, guessMapping, type Field, type Mapping } from './mapping';
-import { detectProject, mapStatus, nameOrgKey, normLinkedIn, parseDeadlines, parseDegree, parseEmail, parsePriority, personKey, type EmailConfidence, type ImportStatus } from './parse';
+import { detectProject, dupKey, mapStatus, nameOrgKey, normLinkedIn, parseDeadlines, parseDegree, parseEmail, parsePriority, personKey, type EmailConfidence, type ImportStatus } from './parse';
 import { applyAction, todayIn, type Channel, type Settings, type State } from './rules';
 import { DEFAULT_TEMPLATES } from './template';
 import type { Sheet } from './workbook';
@@ -95,6 +95,7 @@ export function importSheet(db: DB, fileName: string, sheet: Sheet, cfg: TabConf
     const byKey = new Map(existing.map(c => [c.person_key, c]));
     const byNameOrg = new Map(existing.map(c => [nameOrgKey(c.name, c.org), c]));
     const otherKeys = new Set((db.prepare('SELECT DISTINCT person_key FROM contacts WHERE list_id <> ?').all(listId) as { person_key: string }[]).map(r => r.person_key));
+    const otherDupKeys = new Set((db.prepare("SELECT DISTINCT dup_key(name, org) AS k FROM contacts WHERE list_id <> ? AND status <> 'reference'").all(listId) as { k: string | null }[]).map(r => r.k));
     const getById = db.prepare('SELECT * FROM contacts WHERE id = ?');
     const addEvent = db.prepare('INSERT INTO events (contact_id, type, at, data) VALUES (?,?,?,?)');
     const seen = new Set<number>();
@@ -105,7 +106,7 @@ export function importSheet(db: DB, fileName: string, sheet: Sheet, cfg: TabConf
       const c = rowToContact(values, cfg.mapping, opts.settings.projects);
       if (!c.name) { r.noName++; continue; }
       const key = isRef ? `ref:${row}` : personKey(c);
-      if (!isRef && otherKeys.has(key)) r.crossListDupes++;
+      if (!isRef && (otherKeys.has(key) || otherDupKeys.has(dupKey(c.name, c.org)))) r.crossListDupes++;
       const hit = byKey.get(key);
       if (hit && seen.has(hit.id)) { r.duplicateInFile++; continue; }
       const fallback = hit || isRef ? undefined : byNameOrg.get(nameOrgKey(c.name, c.org));

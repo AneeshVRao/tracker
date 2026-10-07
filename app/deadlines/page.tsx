@@ -67,3 +67,5 @@ export default async function DeadlinesPage({ searchParams }: { searchParams: Pr
     </div>
   );
 }
+
+export const metadata = { title: 'Deadlines' };

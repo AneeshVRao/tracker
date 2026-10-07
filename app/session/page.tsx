@@ -71,3 +71,5 @@ export default async function SessionPage({ searchParams }: { searchParams: Prom
     />
   );
 }
+
+export const metadata = { title: 'Session' };

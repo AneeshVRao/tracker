@@ -55,3 +55,13 @@ Spec: [specs/2026-09-29-outreach-tracker-design.md](specs/2026-09-29-outreach-tr
 - [x] Availability window in Settings as `{{my_dates}}`, used in the default subject and body
 - [x] Pre-send checklist gates copy on first emails (`X` in Session)
 - [x] Lists imported before M5 keep their old templates; edit them on the list page to use `{{my_dates}}` (Professors list updated)
+
+## Audit 2026-10-07 (systematic debugging pass)
+
+- [x] Same person in two lists under different emails was not flagged: duplicates now also match name (titles ignored) + organisation, in the panel badge, the Session warning and the import report
+- [x] Contacts: channel filter (spec F3) and "Next deadline" sort
+- [x] Reference lists (Formal Programmes, DRDO Labs) are browsable as a table on their list page; contact lists link to their contacts
+- [x] Deadlines: reference links found under any URL/link/website column (DRDO "Official URL")
+- [x] Styled error, database-error and 404 pages (spec section 12)
+- [x] Per-page browser tab titles
+- [ ] Sidebar Session badge counts everyone not yet contacted; Today's "ready" excludes company-spacing holds (by design, noted)

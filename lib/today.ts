@@ -64,7 +64,7 @@ export function buildQueue(db: DB, listIds: number[], now: Date, cfg: Settings):
   if (!listIds.length) return { items: [], deferred: 0 };
   const rows = db.prepare(`SELECT c.*, l.name AS list_name, l.channel,
       (SELECT l2.name FROM contacts c2 JOIN lists l2 ON l2.id = c2.list_id
-        WHERE c2.person_key = c.person_key AND c2.id <> c.id AND c2.status NOT IN ('to_contact','skipped','reference') LIMIT 1) AS dup_list
+        WHERE (c2.person_key = c.person_key OR dup_key(c2.name, c2.org) = dup_key(c.name, c.org)) AND c2.id <> c.id AND c2.status NOT IN ('to_contact','skipped','reference') LIMIT 1) AS dup_list
     FROM contacts c JOIN lists l ON l.id = c.list_id
     WHERE l.kind = 'contacts' AND c.status = 'to_contact' AND c.list_id IN (${listIds.map(() => '?').join(', ')})`)
     .all(...listIds) as (Listed & { dup_list: string | null })[];

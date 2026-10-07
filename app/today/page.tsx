@@ -140,3 +140,5 @@ function Row({ href, name, sub, children }: { href: string; name: string; sub: s
     </div>
   );
 }
+
+export const metadata = { title: 'Today' };

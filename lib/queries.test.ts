@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { openDb, type DB } from './db';
-import { bulkFollowUp, bulkSkip, closeStale, editContact, getContactDetail, getSettings, listContacts, LimitError, listSummaries, markIntroRequested, performAction, saveSettings, undoLast } from './queries';
+import { bulkFollowUp, bulkSkip, closeStale, editContact, getContactDetail, getSettings, listContacts, LimitError, listSummaries, markIntroRequested, referenceRows, performAction, saveSettings, undoLast } from './queries';
 
 const now = new Date('2026-09-29T06:00:00Z'); // 11:30 in Asia/Kolkata → today 2026-09-29
 
@@ -110,11 +110,39 @@ describe('reads', () => {
   });
   test('detail shows the same person in other lists', () =>
     expect(getContactDetail(seed(), 1)!.alsoIn).toEqual([{ list: 'Alumni', status: 'to_contact' }]));
+  test('also-in matches the same name at the same org even when the emails differ', () => {
+    const db = seed();
+    db.prepare("INSERT INTO contacts (list_id, person_key, source_row, name, org, email, status, extra) VALUES (2, 'b.typo@y.edu', 9, 'Dr. prof b', 'iit y', 'b.typo@y.edu', 'sent', '{}')").run();
+    db.prepare("INSERT INTO contacts (list_id, person_key, source_row, name, org, status, extra) VALUES (2, 'other', 10, 'Prof B', 'Elsewhere', 'to_contact', '{}')").run();
+    expect(getContactDetail(db, 2)!.alsoIn).toEqual([{ list: 'Alumni', status: 'sent' }]);
+  });
   test('summaries count by status', () =>
     expect(listSummaries(seed())[0]).toMatchObject({ name: 'Profs', total: 2, to_contact: 2, pending: 0 }));
 });
 
+describe('referenceRows', () => {
+  test('returns only reference rows of that list, in sheet order', () => {
+    const db = seed();
+    db.prepare("INSERT INTO lists (name, kind, source_file, source_sheet, header_sig, mapping, imported_at) VALUES ('Ref', 'reference', 'f', 'R', 'h', '{}', 't')").run();
+    db.prepare("INSERT INTO contacts (list_id, person_key, source_row, name, status, extra) VALUES (3, 'ref:5', 5, 'Second', 'reference', '{\"Lab\":\"B\"}'), (3, 'ref:2', 2, 'First', 'reference', '{\"Lab\":\"A\"}')").run();
+    expect(referenceRows(db, 3).map(r => r.cells.Lab)).toEqual(['A', 'B']);
+    expect(referenceRows(db, 1)).toEqual([]);
+  });
+});
+
 describe('listContacts hardening', () => {
+  test('channel filter keeps only email or only LinkedIn lists', () => {
+    const db = seed();
+    expect(listContacts(db, { channel: 'email' }).rows.map(r => r.id)).toEqual([1, 2]);
+    expect(listContacts(db, { channel: 'linkedin' }).rows.map(r => r.id)).toEqual([3]);
+    expect(listContacts(db, { channel: 'fax' }).total).toBe(3);
+  });
+  test('deadline sort puts the soonest upcoming deadline first and undated last', () => {
+    const db = seed();
+    db.prepare("UPDATE contacts SET deadline_dates = '[\"2026-12-01\"]' WHERE id = 2").run();
+    db.prepare("UPDATE contacts SET deadline_manual = '2026-11-01' WHERE id = 3").run();
+    expect(listContacts(db, { sort: 'deadline' }, now).rows.map(r => r.id)).toEqual([3, 2, 1]);
+  });
   test('unknown or malformed col is ignored', () => {
     const db = seed();
     expect(listContacts(db, { col: 'Nope\\', val: 'x' }).total).toBe(3);

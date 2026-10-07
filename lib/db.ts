@@ -1,7 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import fs from 'node:fs';
 import path from 'node:path';
-import type { EmailConfidence } from './parse';
+import { dupKey, type EmailConfidence } from './parse';
 import type { Channel, EventType, Outcome, Status } from './rules';
 
 export type DB = DatabaseSync;
@@ -79,6 +79,7 @@ export function openDb(file: string): DB {
   const db = new DatabaseSync(file);
   db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
   db.exec(SCHEMA);
+  db.function('dup_key', { deterministic: true }, (name, org) => dupKey(String(name ?? ''), org == null ? null : String(org)));
   return db;
 }
 

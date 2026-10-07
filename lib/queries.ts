@@ -57,7 +57,7 @@ export function saveSettings(db: DB, input: Record<string, string>) {
 
 // ---- reads -----------------------------------------------------------------
 export const PAGE_SIZE = 100;
-export type Filters = { list?: number; status?: string; q?: string; priority?: number; conf?: string; within?: number; col?: string; val?: string; sort?: string; page?: number };
+export type Filters = { list?: number; channel?: string; status?: string; q?: string; priority?: number; conf?: string; within?: number; col?: string; val?: string; sort?: string; page?: number };
 const SORTS: Record<string, string> = {
   priority: 'priority DESC, list_id, source_row, id',
   name: 'name COLLATE NOCASE, id',
@@ -70,6 +70,7 @@ export function listContacts(db: DB, f: Filters, now = new Date()): { rows: Cont
   const args: SQLInputValue[] = [];
   const add = (sql: string, ...v: SQLInputValue[]) => { where.push(sql); args.push(...v); };
   if (f.list) add('list_id = ?', f.list);
+  if (f.channel === 'email' || f.channel === 'linkedin') add('list_id IN (SELECT id FROM lists WHERE channel = ?)', f.channel);
   if (f.status === 'open') where.push(`status IN ${OPEN_SQL}`);
   else if (f.status) add('status = ?', f.status);
   if (f.priority) add('priority = ?', f.priority);
@@ -88,8 +89,16 @@ export function listContacts(db: DB, f: Filters, now = new Date()): { rows: Cont
   const w = where.join(' AND ');
   const total = (db.prepare(`SELECT COUNT(*) AS n FROM contacts WHERE ${w}`).get(...args) as { n: number }).n;
   const page = Math.max(1, f.page ?? 1);
-  const order = Object.hasOwn(SORTS, f.sort ?? '') ? SORTS[f.sort!] : 'list_id, source_row, id';
-  const rows = db.prepare(`SELECT * FROM contacts WHERE ${w} ORDER BY ${order} LIMIT ? OFFSET ?`).all(...args, PAGE_SIZE, (page - 1) * PAGE_SIZE) as Contact[];
+  let order = Object.hasOwn(SORTS, f.sort ?? '') ? SORTS[f.sort!] : 'list_id, source_row, id';
+  const orderArgs: SQLInputValue[] = [];
+  if (f.sort === 'deadline') {
+    // same rule as nextDeadline(): an upcoming manual date wins, else the earliest parsed date from today on
+    const today = todayIn(getSettings(db).my_timezone, now);
+    const next = '(COALESCE(CASE WHEN deadline_manual >= ? THEN deadline_manual END, (SELECT MIN(value) FROM json_each(deadline_dates) WHERE value >= ?)))';
+    order = `${next} IS NULL, ${next}, id`;
+    orderArgs.push(today, today, today, today);
+  }
+  const rows = db.prepare(`SELECT * FROM contacts WHERE ${w} ORDER BY ${order} LIMIT ? OFFSET ?`).all(...args, ...orderArgs, PAGE_SIZE, (page - 1) * PAGE_SIZE) as Contact[];
   return { rows, total };
 }
 
@@ -108,6 +117,11 @@ export function listSummaries(db: DB): ListSummary[] {
 
 export const getList = (db: DB, id: number) => db.prepare('SELECT * FROM lists WHERE id = ?').get(id) as List | undefined;
 
+/** A reference list's rows as their original sheet columns, in sheet order. */
+export const referenceRows = (db: DB, listId: number) =>
+  (db.prepare("SELECT id, extra FROM contacts WHERE list_id = ? AND status = 'reference' ORDER BY source_row, id").all(listId) as { id: number; extra: string }[])
+    .map(r => ({ id: r.id, cells: JSON.parse(r.extra) as Record<string, string> }));
+
 export function listHeaders(db: DB, listId?: number): string[] {
   const rows = (listId
     ? db.prepare('SELECT headers FROM lists WHERE id = ?').all(listId)
@@ -125,8 +139,8 @@ export function getContactDetail(db: DB, id: number, now = new Date()): ContactD
   const list = getList(db, contact.list_id)!;
   const cfg = getSettings(db);
   const events = db.prepare('SELECT * FROM events WHERE contact_id = ? ORDER BY id DESC').all(id) as EventRow[];
-  const alsoIn = db.prepare("SELECT l.name AS list, c.status FROM contacts c JOIN lists l ON l.id = c.list_id WHERE c.person_key = ? AND c.id <> ? AND c.status <> 'reference'")
-    .all(contact.person_key, id) as ContactDetail['alsoIn'];
+  const alsoIn = db.prepare("SELECT l.name AS list, c.status FROM contacts c JOIN lists l ON l.id = c.list_id WHERE (c.person_key = ? OR dup_key(c.name, c.org) = dup_key(?, ?)) AND c.list_id <> ? AND c.status <> 'reference'")
+    .all(contact.person_key, contact.name, contact.org, contact.list_id) as ContactDetail['alsoIn'];
   const stats = list.channel === 'linkedin' ? activityStats(db, now, cfg) : null;
   return {
     contact, list, events, alsoIn, canUndo: undoTarget(db, id) !== undefined,

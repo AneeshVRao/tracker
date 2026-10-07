@@ -22,3 +22,5 @@ export default function IntrosPage() {
     </div>
   );
 }
+
+export const metadata = { title: 'Warm intros' };

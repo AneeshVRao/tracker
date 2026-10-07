@@ -51,3 +51,5 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
     </div>
   );
 }
+
+export const metadata = { title: 'What gets replies' };

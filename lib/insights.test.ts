@@ -81,4 +81,10 @@ describe('referenceDeadlines', () => {
       ['Soon', '2026-10-10', 10, 'https://b.test'], ['Later', '2026-11-30', 61, 'https://a.test'], ['None', null, null, null],
     ]);
   });
+  test('url is found under descriptive headers like "Official URL" but never from a non-link value', () => {
+    const db = seed();
+    contact(db, { list_id: 3, name: 'Lab', status: 'reference', extra: '{"Official URL":"https://lab.test","Research Areas":"Radar"}' });
+    contact(db, { list_id: 3, name: 'Junk', status: 'reference', extra: '{"Website":"see notes"}' });
+    expect(referenceDeadlines(db, '2026-09-30').map(r => [r.name, r.url])).toEqual([['Lab', 'https://lab.test'], ['Junk', null]]);
+  });
 });

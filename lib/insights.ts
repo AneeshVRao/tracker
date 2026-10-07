@@ -80,7 +80,7 @@ export function referenceDeadlines(db: DB, today: string): RefDeadline[] {
   return rows.map(r => {
     const next = nextDeadline(JSON.parse(r.deadline_dates), r.deadline_manual, today);
     const extra = JSON.parse(r.extra) as Record<string, string>;
-    const url = Object.entries(extra).find(([k, v]) => /^(url|link|website)$/i.test(k.trim()) && /^https?:\/\//i.test(v))?.[1] ?? null;
+    const url = Object.entries(extra).find(([k, v]) => /\b(url|link|website)\b/i.test(k) && /^https?:\/\//i.test(v))?.[1] ?? null;
     return {
       id: r.id, name: r.name, org: r.org, list_name: r.list_name, deadline_text: r.deadline_text, url, next,
       days: next ? Math.round((Date.parse(next) - Date.parse(today)) / DAY) : null,

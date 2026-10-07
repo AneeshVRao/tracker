@@ -13,7 +13,7 @@ const num = (v?: string) => (v && /^\d+$/.test(v) ? Number(v) : undefined);
 export default async function ContactsPage({ searchParams }: { searchParams: Promise<SP> }) {
   const raw = await searchParams;
   const sp = Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, (Array.isArray(v) ? v[0] : v) || undefined])) as Record<string, string | undefined>;
-  const f: Filters = { list: num(sp.list), status: sp.status, q: sp.q, priority: num(sp.priority), conf: sp.conf, col: sp.col, val: sp.val, sort: sp.sort, within: num(sp.within), page: num(sp.page) ?? 1 };
+  const f: Filters = { list: num(sp.list), channel: sp.channel, status: sp.status, q: sp.q, priority: num(sp.priority), conf: sp.conf, col: sp.col, val: sp.val, sort: sp.sort, within: num(sp.within), page: num(sp.page) ?? 1 };
   const db = getDb();
   const now = new Date();
   const lists = listSummaries(db).filter(l => l.kind === 'contacts');
@@ -38,6 +38,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
           <h1 className="mr-3 text-[18px] font-semibold tracking-[-0.02em]">Contacts <span className="ml-1 font-mono text-xs font-normal text-muted">{total.toLocaleString('en-IN')}</span></h1>
           <input name="q" aria-label="Search" defaultValue={sp.q} placeholder="Search name, org, role, message" className="input w-64" />
           <select name="list" aria-label="List" defaultValue={sp.list ?? ''} className="input"><option value="">All lists</option>{lists.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}</select>
+          <select name="channel" aria-label="Channel" defaultValue={sp.channel ?? ''} className="input"><option value="">Any channel</option><option value="email">Email</option><option value="linkedin">LinkedIn</option></select>
           <select name="status" aria-label="Status" defaultValue={sp.status ?? ''} className="input">
             <option value="">Any status</option><option value="open">Open</option>
             {(Object.keys(STATUS_LABEL) as Status[]).filter(s => s !== 'reference').map(s => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
@@ -47,7 +48,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
           <select name="within" defaultValue={sp.within ?? ''} className="input" aria-label="Deadline within"><option value="">Any deadline</option><option value="7">Deadline ≤ 7 days</option><option value="21">Deadline ≤ 21 days</option><option value="60">Deadline ≤ 60 days</option></select>
           <select name="col" aria-label="Column" defaultValue={sp.col ?? ''} className="input max-w-44"><option value="">Column…</option>{headers.map(h => <option key={h} value={h}>{h}</option>)}</select>
           <input name="val" aria-label="Column contains" defaultValue={sp.val} placeholder="contains" className="input w-28" />
-          <select name="sort" aria-label="Sort" defaultValue={sp.sort ?? ''} className="input"><option value="">Sheet order</option><option value="priority">Priority</option><option value="name">Name</option><option value="follow">Follow-up date</option><option value="touched">Last touched</option></select>
+          <select name="sort" aria-label="Sort" defaultValue={sp.sort ?? ''} className="input"><option value="">Sheet order</option><option value="priority">Priority</option><option value="name">Name</option><option value="deadline">Next deadline</option><option value="follow">Follow-up date</option><option value="touched">Last touched</option></select>
           <button className="btn">Apply</button>
           <Link href="/contacts" className="rounded px-1.5 py-1 text-muted hover:text-fg">Reset</Link>
         </form>
@@ -102,3 +103,5 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
     </div>
   );
 }
+
+export const metadata = { title: 'Contacts' };

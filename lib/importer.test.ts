@@ -166,3 +166,14 @@ describe('importSheet', () => {
     expect((db.prepare('SELECT COUNT(*) AS n FROM contacts').get() as { n: number }).n).toBe(0);
   });
 });
+
+describe('cross-list duplicates by name and organisation', () => {
+  test('a person already in another list under a different email counts as a duplicate', () => {
+    const db = openDb(':memory:');
+    const sheet = (name: string, email: string): Sheet => ({ name: 'S', headers: ['Name', 'Institute', 'Email'], rows: [{ row: 2, values: { Name: name, Institute: 'IIT Q', Email: email } }] });
+    const cfg = (n: string) => ({ sheet: 'S', include: true, listName: n, kind: 'contacts' as const, channel: 'email' as const, mapping: { name: 'Name', org: 'Institute', email: 'Email' }, existingListId: null });
+    importSheet(db, 'a.xlsx', sheet('Asha Rao', 'asha@iitq.ac.in'), cfg('A'), { now: new Date(), settings });
+    const r = importSheet(db, 'b.xlsx', sheet('Prof. Asha Rao', 'asha.typo@iitq.ac.in'), cfg('B'), { now: new Date(), settings });
+    expect(r.crossListDupes).toBe(1);
+  });
+});

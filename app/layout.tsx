@@ -13,7 +13,7 @@ const sans = Figtree({ subsets: ['latin'], variable: '--font-figtree' });
 const mono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains' });
 
 export const dynamic = 'force-dynamic'; // every page reads the live DB
-export const metadata: Metadata = { title: 'Outreach Tracker' };
+export const metadata: Metadata = { title: { default: 'Outreach', template: '%s · Outreach' } };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const db = getDb();
