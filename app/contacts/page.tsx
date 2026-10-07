@@ -6,6 +6,7 @@ import { getDb } from '@/lib/db';
 import { getContactDetail, getSettings, listContacts, listHeaders, listSummaries, PAGE_SIZE, type Filters } from '@/lib/queries';
 import { STATUS_LABEL, type Status } from '@/lib/rules';
 import { ContactPanel } from './ContactPanel';
+import { FilterForm } from '@/app/FilterForm';
 
 type SP = Record<string, string | string[] | undefined>;
 const num = (v?: string) => (v && /^\d+$/.test(v) ? Number(v) : undefined);
@@ -34,7 +35,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
   return (
     <div className="flex min-h-screen flex-col xl:h-screen xl:flex-row">
       <section className="flex min-w-0 flex-1 flex-col xl:min-h-0">
-        <form action="/contacts" className="flex flex-wrap items-center gap-1.5 border-b border-line bg-panel px-4 py-3">
+        <FilterForm action="/contacts" className="flex flex-wrap items-center gap-1.5 border-b border-line bg-panel px-4 py-3">
           <h1 className="mr-3 text-[18px] font-semibold tracking-[-0.02em]">Contacts <span className="ml-1 font-mono text-xs font-normal text-muted">{total.toLocaleString('en-IN')}</span></h1>
           <input name="q" aria-label="Search" defaultValue={sp.q} placeholder="Search name, org, role, message" className="input w-64" />
           <select name="list" aria-label="List" defaultValue={sp.list ?? ''} className="input"><option value="">All lists</option>{lists.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}</select>
@@ -51,7 +52,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
           <select name="sort" aria-label="Sort" defaultValue={sp.sort ?? ''} className="input"><option value="">Sheet order</option><option value="priority">Priority</option><option value="name">Name</option><option value="deadline">Next deadline</option><option value="follow">Follow-up date</option><option value="touched">Last touched</option></select>
           <button className="btn">Apply</button>
           <Link href="/contacts" className="rounded px-1.5 py-1 text-muted hover:text-fg">Reset</Link>
-        </form>
+        </FilterForm>
 
         <form action={bulkForm} className="flex min-h-0 flex-1 flex-col">
           <div className="flex flex-wrap items-center gap-1.5 border-b border-line bg-sunken/60 px-3 py-1.5 text-xs text-muted">

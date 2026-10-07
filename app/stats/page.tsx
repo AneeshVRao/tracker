@@ -1,3 +1,4 @@
+import { FilterForm } from '@/app/FilterForm';
 import Link from 'next/link';
 import { Empty } from '@/app/ui';
 import { getDb } from '@/lib/db';
@@ -19,13 +20,12 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
     <div className="mx-auto max-w-5xl space-y-4 p-6">
       <header className="flex flex-wrap items-end gap-3">
         <h1 className="page-title mr-auto">What gets <em>replies</em></h1>
-        <form action="/stats" className="flex items-center gap-1.5">
+        <FilterForm action="/stats" className="flex items-center gap-1.5">
           <select name="dim" defaultValue={dim} className="input" aria-label="Group by">
             {DIMS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
             <optgroup label="Sheet column">{headers.map(h => <option key={h} value={`col:${h}`}>{h}</option>)}</optgroup>
           </select>
-          <button className="btn">Group</button>
-        </form>
+        </FilterForm>
       </header>
       <p className="max-w-[65ch] text-muted">Counts only contacts you marked sent. Accepted applies to LinkedIn invites. Groups with fewer than 5 sends are greyed out: too few to trust.</p>
       {rows.length === 0 ? <Empty>No sends yet. Stats appear once you start marking messages sent. <Link href="/session" className="text-accent underline">Start a session</Link>.</Empty> : (
